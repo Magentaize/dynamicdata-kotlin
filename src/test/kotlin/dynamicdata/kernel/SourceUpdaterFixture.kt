@@ -6,7 +6,7 @@ import dynamicdata.cache.internal.CacheUpdater
 import dynamicdata.domain.Person
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 internal class SourceUpdaterFixture {
     private val cache = ChangeAwareCache<Person, String>()
@@ -32,7 +32,7 @@ internal class SourceUpdaterFixture {
         val updates = cache.captureChanges()
 
         cache.size shouldBeEqualTo 0
-        updates.count() shouldBeEqualTo 0
+        updates.size shouldBeEqualTo 0
     }
 
     @Test
@@ -44,7 +44,7 @@ internal class SourceUpdaterFixture {
         cache.items.toList() shouldBeEqualTo people
         cache.size shouldBeEqualTo 100
         updates.adds shouldBeEqualTo 100
-        updates.count() shouldBeEqualTo 100
+        updates.size shouldBeEqualTo 100
     }
 
     @Test
@@ -57,7 +57,7 @@ internal class SourceUpdaterFixture {
         cache.size shouldBeEqualTo 0
         100 shouldBeEqualTo updates.count { it.reason == ChangeReason.Add }
         100 shouldBeEqualTo updates.count { it.reason == ChangeReason.Remove }
-        200 shouldBeEqualTo updates.count()
+        200 shouldBeEqualTo updates.size
     }
 
     @Test
@@ -70,7 +70,7 @@ internal class SourceUpdaterFixture {
         cache.size shouldBeEqualTo 1
         99 shouldBeEqualTo updates.count { it.reason == ChangeReason.Update }
         1 shouldBeEqualTo updates.count { it.reason == ChangeReason.Add }
-        100 shouldBeEqualTo updates.count()
+        100 shouldBeEqualTo updates.size
     }
 
     @Test
@@ -84,7 +84,7 @@ internal class SourceUpdaterFixture {
         cache.size shouldBeEqualTo 0
         1 shouldBeEqualTo updates.count { it.reason == ChangeReason.Add }
         1 shouldBeEqualTo updates.count { it.reason == ChangeReason.Remove }
-        2 shouldBeEqualTo updates.count()
+        2 shouldBeEqualTo updates.size
     }
 
     @Test
@@ -99,7 +99,7 @@ internal class SourceUpdaterFixture {
         cache.size shouldBeEqualTo 1
         1 shouldBeEqualTo updates.count { it.reason == ChangeReason.Add }
         1 shouldBeEqualTo updates.count { it.reason == ChangeReason.Update }
-        2 shouldBeEqualTo updates.count()
+        2 shouldBeEqualTo updates.size
     }
 
     @Test
@@ -112,6 +112,6 @@ internal class SourceUpdaterFixture {
         cache.size shouldBeEqualTo 0
         100 shouldBeEqualTo updates.count { it.reason == ChangeReason.Add }
         100 shouldBeEqualTo updates.count { it.reason == ChangeReason.Remove }
-        200 shouldBeEqualTo updates.count()
+        200 shouldBeEqualTo updates.size
     }
 }

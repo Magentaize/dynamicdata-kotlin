@@ -1,8 +1,19 @@
 package dynamicdata.list
 
 class ChangeSet<T> : ArrayList<Change<T>>, IChangeSet<T> {
-    constructor()
+    companion object {
+        private val INSTANCE: ChangeSet<Any?> = ChangeSet(emptyList())
+
+        fun <T> empty(): ChangeSet<T> {
+            return INSTANCE as ChangeSet<T>
+        }
+    }
+
+    //constructor()
     constructor(items: Collection<Change<T>>) : super(items)
+
+    override val size: Int
+        get() = super.size
 
     override val adds: Int
         get() =

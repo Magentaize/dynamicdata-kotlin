@@ -1,9 +1,20 @@
 package dynamicdata.cache
 
-class ChangeSet<TObject, TKey> : ArrayList<Change<TObject, TKey>>, IChangeSet<TObject, TKey>{
+class ChangeSet<TObject, TKey> : ArrayList<Change<TObject, TKey>>, IChangeSet<TObject, TKey> {
+    companion object {
+        private val INSTANCE: ChangeSet<Any?, Any?> = ChangeSet()
+
+        fun <TObject, TKey> empty(): ChangeSet<TObject, TKey> {
+            return INSTANCE as ChangeSet<TObject, TKey>
+        }
+    }
+
     constructor()
     constructor(collection: Collection<Change<TObject, TKey>>) : super(collection)
     constructor(capacity: Int) : super(capacity)
+
+    override val size: Int
+        get() = super.size
 
     override val adds
         get() =

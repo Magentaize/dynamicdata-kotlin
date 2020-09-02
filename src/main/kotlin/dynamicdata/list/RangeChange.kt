@@ -1,9 +1,9 @@
 package dynamicdata.list
 
-class RangeChange<T>(private val items: MutableList<T>, index: Int = -1) : Collection<T> by items {
-    //private val items: MutableList<T> = items.toMutableList()
+class RangeChange<T>(elements: Iterable<T>, index: Int = -1) : Collection<T> {
+    private val items: MutableList<T> = elements.toMutableList()
 
-    constructor(items: Iterable<T>, index: Int = -1):this(items.toMutableList(), index)
+    //constructor(items: Iterable<T>, index: Int = -1):this(items.toMutableList(), index)
 
     var index: Int = index
         private set
@@ -18,15 +18,26 @@ class RangeChange<T>(private val items: MutableList<T>, index: Int = -1) : Colle
         this.index = index
     }
 
-    override fun iterator(): Iterator<T> =
-        items.iterator()
-
     override fun contains(element: T): Boolean =
         items.contains(element)
 
     override fun containsAll(elements: Collection<T>): Boolean =
-        items.containsAll(elements)
+        this.items.containsAll(elements)
 
     override fun isEmpty(): Boolean =
         items.isEmpty()
+
+    override val size: Int
+        get() = items.size
+
+//    override fun iterator(): Iterator<T> =
+//        items.iterator()
+
+    override operator fun iterator(): Iterator<T> =
+        items.iterator()
+
+
+    override fun toString(): String {
+        return "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+    }
 }

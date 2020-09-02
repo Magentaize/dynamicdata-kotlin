@@ -79,7 +79,7 @@ class ChangeAwareCache<TObject, TKey>(
     }
 
     fun captureChanges(): IChangeSet<TObject, TKey> {
-        //if (changes.count() == 0) return ChangeSet()
+        if (changes.count() == 0) return ChangeSet.empty()
 
         val copy = changes
         changes = ChangeSet()

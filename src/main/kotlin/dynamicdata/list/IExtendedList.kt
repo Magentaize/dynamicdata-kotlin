@@ -1,3 +1,3 @@
 package dynamicdata.list
 
-interface IExtendedList<E> : Collection<E>, MutableIterable<E>
+interface IExtendedList<E> : Collection<E>, MutableList<E>

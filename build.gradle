@@ -1,7 +1,6 @@
 buildscript {
     ext {
         kotlin_version = "1.4.0"
-        atrium_version = '0.13.0'
         kluent_version = '1.61'
     }
 }
@@ -20,6 +19,7 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile 'net.servicestack:client:1.0.43'
 }
 
 dependencies {

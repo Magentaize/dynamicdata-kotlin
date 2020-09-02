@@ -7,7 +7,7 @@ import org.amshove.kluent.`should not be`
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldThrow
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import java.lang.IllegalArgumentException
 
 internal class UpdateFixture {

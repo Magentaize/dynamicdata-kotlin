@@ -4,7 +4,7 @@ import dynamicdata.cache.Change
 import dynamicdata.cache.ChangeReason
 import dynamicdata.domain.Person
 import org.amshove.kluent.*
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import java.lang.IllegalArgumentException
 
 internal class DistinctUpdateFixture {

@@ -6,8 +6,7 @@ import dynamicdata.cache.internal.CacheUpdater
 import dynamicdata.domain.Person
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.jupiter.api.Test
-import java.lang.IllegalStateException
+import kotlin.test.Test
 
 internal class CacheUpdaterFixture {
     private val cache = ChangeAwareCache<Person, String>()
@@ -33,7 +32,7 @@ internal class CacheUpdaterFixture {
         val updates = cache.captureChanges()
 
         cache.size shouldBe 0
-        updates.count() shouldBe 0
+        updates.size shouldBe 0
     }
 
     @Test
@@ -46,7 +45,7 @@ internal class CacheUpdaterFixture {
         cache.size shouldBe 0
         1 shouldBe updates.count { it.reason == ChangeReason.Add }
         1 shouldBe updates.count { it.reason == ChangeReason.Remove }
-        2 shouldBe updates.count()
+        2 shouldBe updates.size
     }
 
     @Test
@@ -61,6 +60,6 @@ internal class CacheUpdaterFixture {
         cache.size shouldBe 1
         1 shouldBe updates.count { it.reason == ChangeReason.Add }
         1 shouldBe updates.count { it.reason == ChangeReason.Update }
-        2 shouldBe updates.count()
+        2 shouldBe updates.size
     }
 }

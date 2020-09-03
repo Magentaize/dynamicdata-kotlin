@@ -1,6 +1,5 @@
 package dynamicdata.list
 
-import dynamicdata.kernel.removeRange
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldThrow
@@ -142,7 +141,7 @@ internal class ChangeAwareListFixture {
     fun removeMany() {
         list.addAll(1..10)
         list.clearChanges()
-        list.removeRange(1..10)
+        list.removeMany(1..10)
         val changes = list.captureChanges()
 
         changes.size shouldBeEqualTo 1
@@ -197,7 +196,7 @@ internal class ChangeAwareListFixture {
         invoking { list.removeAll(0, 1) }
             .shouldThrow(IndexOutOfBoundsException::class)
     }
-    
+
     @Test
     fun throwWhenRemovingRangeThatFinishesOutsideOfBoundaries() {
         list.add(0)

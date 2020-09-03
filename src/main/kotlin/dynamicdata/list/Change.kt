@@ -16,10 +16,16 @@ data class Change<T>(
     constructor(reason: ListChangeReason, current: T, index: Int = -1)
             : this(reason, current, null, index)
 
+    constructor(current: T, currentIndex: Int, previousIndex: Int)
+            : this(
+        ListChangeReason.Moved, ItemChange(ListChangeReason.Moved, current, null, currentIndex, previousIndex),
+        RangeChange.empty()
+    )
+
     constructor(
         reason: ListChangeReason, current: T, previous: T?,
         currentIndex: Int = -1, previousIndex: Int = -1
-    ) : this(reason, ItemChange(reason, current, previous, currentIndex, previousIndex), RangeChange(listOf())) {
+    ) : this(reason, ItemChange(reason, current, previous, currentIndex, previousIndex), RangeChange.empty()) {
         if (reason == ListChangeReason.Add && previous != null)
             throw IllegalArgumentException("For ChangeReason.Add, a previous value cannot be specified")
 

@@ -4,8 +4,8 @@ class ChangeSet<T> : ArrayList<Change<T>>, IChangeSet<T> {
     companion object {
         private val INSTANCE: ChangeSet<Any?> = ChangeSet(emptyList())
 
-        fun <T> empty(): ChangeSet<T> {
-            return INSTANCE as ChangeSet<T>
+        fun <T> empty(): IChangeSet<T> {
+            return INSTANCE as IChangeSet<T>
         }
     }
 

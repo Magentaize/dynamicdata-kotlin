@@ -1,6 +1,14 @@
 package dynamicdata.list
 
 class RangeChange<T>(elements: Iterable<T>, index: Int = -1) : Collection<T> {
+    companion object {
+        private val INSTANCE: RangeChange<Any?> = RangeChange(emptyList())
+
+        fun <T> empty(): RangeChange<T> {
+            return INSTANCE as RangeChange<T>
+        }
+    }
+
     private val items: MutableList<T> = elements.toMutableList()
 
     //constructor(items: Iterable<T>, index: Int = -1):this(items.toMutableList(), index)

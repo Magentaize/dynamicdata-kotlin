@@ -1,6 +1,6 @@
 package dynamicdata.list
 
-open class ChangeAwareList<T> : MutableList<T> {
+open class ChangeAwareList<T> : IExtendedList<T> {
     private val lock = Any()
     private val innerList: MutableList<T>
     private var changes = ChangeSet<T>(emptyList())
@@ -289,6 +289,25 @@ open class ChangeAwareList<T> : MutableList<T> {
 
     //endregion
 
+    override fun move(original: Int, destination: Int) {
+        if (original < 0)
+            throw IllegalArgumentException("original cannot be negative")
+        if (destination < 0)
+            throw IllegalArgumentException("destination cannot be negative")
+
+        synchronized(lock) {
+            if (original > innerList.size)
+                throw IllegalArgumentException("original cannot be greater than the size of the collection")
+            if (destination > innerList.size)
+                throw IllegalArgumentException("destination cannot be greater than the size of the collection")
+
+            val item = innerList[original]
+            innerList.removeAt(original)
+            innerList.add(destination, item)
+            changes.add(Change(item, destination, original))
+        }
+    }
+
     protected open fun onSetItem(index: Int, newItem: T, oldItem: T) {}
 
     protected open fun onInsertItems(startIndex: Int, items: Collection<T>) {}
@@ -335,7 +354,8 @@ open class ChangeAwareList<T> : MutableList<T> {
         TODO("Not yet implemented")
     }
 
-    override fun subList(fromIndex: Int, toIndex: Int): MutableList<T> {
-        TODO("Not yet implemented")
-    }
+    override fun subList(fromIndex: Int, toIndex: Int): MutableList<T> =
+        synchronized(lock) {
+            ArrayList(innerList.subList(fromIndex, toIndex))
+        }
 }

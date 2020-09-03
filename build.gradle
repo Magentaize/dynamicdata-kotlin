@@ -43,6 +43,5 @@ compileTestKotlin {
 }
 
 dependencies {
-    implementation platform('io.projectreactor:reactor-bom:Bismuth-RELEASE')
-    implementation 'io.projectreactor:reactor-core'
+    implementation("io.reactivex.rxjava3:rxkotlin:3.0.0")
 }

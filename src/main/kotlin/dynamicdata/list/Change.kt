@@ -1,5 +1,6 @@
 package dynamicdata.list
 
+import dynamicdata.kernel.Optional
 import kotlin.IllegalArgumentException
 
 data class Change<T>(
@@ -14,22 +15,23 @@ data class Change<T>(
             : this(reason, ItemChange.empty(), RangeChange(items, index))
 
     constructor(reason: ListChangeReason, current: T, index: Int = -1)
-            : this(reason, current, null, index)
+            : this(reason, current, Optional.empty(), index)
 
     constructor(current: T, currentIndex: Int, previousIndex: Int)
             : this(
-        ListChangeReason.Moved, ItemChange(ListChangeReason.Moved, current, null, currentIndex, previousIndex),
+        ListChangeReason.Moved,
+        ItemChange(ListChangeReason.Moved, current, Optional.empty(), currentIndex, previousIndex),
         RangeChange.empty()
     )
 
     constructor(
-        reason: ListChangeReason, current: T, previous: T?,
+        reason: ListChangeReason, current: T, previous: Optional<T>,
         currentIndex: Int = -1, previousIndex: Int = -1
     ) : this(reason, ItemChange(reason, current, previous, currentIndex, previousIndex), RangeChange.empty()) {
-        if (reason == ListChangeReason.Add && previous != null)
+        if (reason == ListChangeReason.Add && previous.hasValue)
             throw IllegalArgumentException("For ChangeReason.Add, a previous value cannot be specified")
 
-        if (reason == ListChangeReason.Replace && previous == null)
+        if (reason == ListChangeReason.Replace && !previous.hasValue)
             throw IllegalArgumentException("For ChangeReason.Change, must supply previous value")
 
         if (reason == ListChangeReason.Refresh && currentIndex < 0)

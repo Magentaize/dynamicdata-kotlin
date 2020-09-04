@@ -3,13 +3,13 @@ package dynamicdata.list
 import dynamicdata.kernel.duplicates
 import dynamicdata.kernel.indexOfMany
 
-fun <T> IExtendedList<T>.clone(changes: IChangeSet<T>) =
+fun <T> MutableList<T>.clone(changes: IChangeSet<T>) =
     clone(changes as Iterable<Change<T>>)
 
-fun <T> IExtendedList<T>.clone(changes: Iterable<Change<T>>) =
+fun <T> MutableList<T>.clone(changes: Iterable<Change<T>>) =
     changes.forEach { clone(it) }
 
-private fun <T> IExtendedList<T>.clone(item: Change<T>) {
+private fun <T> MutableList<T>.clone(item: Change<T>) {
     val changeAware = this as? ChangeAwareList<T>
 
     when (item.reason) {
@@ -81,7 +81,7 @@ private fun <T> IExtendedList<T>.clone(item: Change<T>) {
     }
 }
 
-fun <T> IExtendedList<T>.addOrInsertRange(items: Iterable<T>, index: Int) {
+fun <T> MutableList<T>.addOrInsertRange(items: Iterable<T>, index: Int) {
     if (index >= 0) {
         this.addAll(index, items.toList())
     } else {
@@ -89,14 +89,14 @@ fun <T> IExtendedList<T>.addOrInsertRange(items: Iterable<T>, index: Int) {
     }
 }
 
-fun <T> IExtendedList<T>.clearOrRemoveMany(change: Change<T>) {
+fun <T> MutableList<T>.clearOrRemoveMany(change: Change<T>) {
     if (this.size == change.range.size)
         this.clear()
     else
         this.removeMany(change.range)
 }
 
-fun <T> IExtendedList<T>.removeMany(itemsToRemove: Iterable<T>) {
+fun <T> MutableList<T>.removeMany(itemsToRemove: Iterable<T>) {
     val toRemoveList = itemsToRemove.toList()
 
     // match all indicies and and remove in reverse as it is more efficient
@@ -117,7 +117,7 @@ fun <T> IExtendedList<T>.removeMany(itemsToRemove: Iterable<T>) {
         toRemove.forEach { this.removeAt(it.index) }
 }
 
-fun <T> IExtendedList<T>.replaceOrAdd(original: T, replaceWith: T) {
+fun <T> MutableList<T>.replaceOrAdd(original: T, replaceWith: T) {
     val index = this.indexOf(original)
     if (index == -1)
         this.add(replaceWith)

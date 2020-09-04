@@ -1,5 +1,6 @@
 package dynamicdata.list
 
+import dynamicdata.kernel.convert
 import dynamicdata.list.linq.ItemChangeEnumerator
 import dynamicdata.list.linq.UnifiedChangeEnumerator
 
@@ -25,3 +26,20 @@ fun ListChangeReason.getChangeType() =
         ) -> ChangeType.Range
         else -> throw IllegalArgumentException()
     }
+
+fun <T, R> IChangeSet<T>.transform(transformer: (T) -> R): IChangeSet<R> {
+    val changes = this.map {
+        if (it.type == ChangeType.Item)
+            Change(
+                it.reason,
+                transformer(it.item.current),
+                it.item.previous.convert(transformer),
+                it.item.currentIndex,
+                it.item.previousIndex
+            )
+        else
+            Change(it.reason, it.range.map(transformer), it.range.index)
+    }
+
+    return ChangeSet(changes)
+}

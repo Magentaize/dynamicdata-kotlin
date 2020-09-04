@@ -305,7 +305,7 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
 
     protected open fun onRemoveItems(startIndex: Int, items: Collection<T>) {}
 
-    fun get(index: Int): T =
+    operator fun get(index: Int): T =
         synchronized(lock) {
             _innerList[index]
         }

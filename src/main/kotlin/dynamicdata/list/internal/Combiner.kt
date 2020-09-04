@@ -41,7 +41,7 @@ internal class Combiner<T>(
                 ListChangeReason.Add -> tracker.add(it.item.current)
                 ListChangeReason.AddRange -> it.range.forEach { t -> tracker.add(t) }
                 ListChangeReason.Replace -> {
-                    tracker.remove(it.item.previous!!)
+                    tracker.remove(it.item.previous.value)
                     tracker.add(it.item.current)
                 }
                 ListChangeReason.Remove -> tracker.remove(it.item.current)
@@ -60,7 +60,7 @@ internal class Combiner<T>(
                 in setOf(ListChangeReason.Add, ListChangeReason.Remove) ->
                     updateItemMembership(change.current, sourceLists, resultList)
                 ListChangeReason.Replace -> {
-                    updateItemMembership(change.previous!!, sourceLists, resultList)
+                    updateItemMembership(change.previous.value, sourceLists, resultList)
                     updateItemMembership(change.current, sourceLists, resultList)
                 }
                 // Pass through refresh changes:

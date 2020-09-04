@@ -1,9 +1,13 @@
 package dynamicdata.list
 
+import dynamicdata.list.linq.ItemChangeEnumerator
 import dynamicdata.list.linq.UnifiedChangeEnumerator
 
 internal fun <T> IChangeSet<T>.unified() =
     UnifiedChangeEnumerator(this)
+
+fun <T> IChangeSet<T>.flatten(): Iterable<ItemChange<T>> =
+    ItemChangeEnumerator(this)
 
 fun ListChangeReason.getChangeType() =
     when (this) {

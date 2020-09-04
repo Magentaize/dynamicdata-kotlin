@@ -37,7 +37,7 @@ internal class FilterStatic<T>(
                         filtered.remove(change.previous)
                 }
                 ListChangeReason.Remove -> filtered.remove(item.item.current)
-                ListChangeReason.RemoveRange -> filtered.removeAll(item.range)
+                ListChangeReason.RemoveRange -> filtered.removeMany(item.range)
                 ListChangeReason.Clear -> filtered.clearOrRemoveMany(item)
             }
         }

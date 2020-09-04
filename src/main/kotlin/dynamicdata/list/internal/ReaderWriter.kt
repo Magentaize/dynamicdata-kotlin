@@ -6,6 +6,7 @@ import dynamicdata.list.IExtendedList
 import dynamicdata.list.clone
 
 internal class ReaderWriter<T>() {
+
     private var data = ChangeAwareList<T>()
     private val lock = Any()
     private var updateInProgress = false

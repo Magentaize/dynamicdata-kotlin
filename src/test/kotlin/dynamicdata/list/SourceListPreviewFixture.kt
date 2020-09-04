@@ -95,8 +95,8 @@ internal class SourceListPreviewFixture {
     fun formNewListFromChanges() {
         source.clear()
         source.addRange(1..100)
-        val aggregator = source.preview { i % 2 == 0 }.asAggregator()
-        source.removeAt(0)
+        val aggregator = source.preview { it % 2 == 0 }.asAggregator()
+        source.removeAt(10)
         source.removeRange(10, 5)
         source.add(1)
         source.add(2)

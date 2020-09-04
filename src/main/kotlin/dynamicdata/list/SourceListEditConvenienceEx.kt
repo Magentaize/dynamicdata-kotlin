@@ -1,7 +1,22 @@
 package dynamicdata.list
 
 fun <T> ISourceList<T>.add(item: T) =
-    this.edit { it.add(item) }
+    edit { it.add(item) }
+
+fun <T> ISourceList<T>.addRange(items: Iterable<T>) =
+    edit { it.addAll(items) }
+
+fun <T> ISourceList<T>.remove(item: T): Boolean {
+    var removed = false
+    edit { removed = it.remove(item) }
+    return removed
+}
+
+fun <T> ISourceList<T>.removeAt(index: Int) =
+    edit { it.removeAt(index) }
+
+fun <T> ISourceList<T>.removeRange(index: Int, count: Int) =
+    edit { it.removeAll(index, count) }
 
 fun <T> ISourceList<T>.clear() =
-    this.edit { it.clear() }
+    edit { it.clear() }

@@ -1,40 +1,40 @@
 package dynamicdata.list
 
-open class ChangeAwareList<T> : IExtendedList<T> {
+open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<T> {
     private val lock = Any()
-    private val innerList: MutableList<T>
-    private var changes = ChangeSet<T>(emptyList())
+    private val _innerList: MutableList<T>
+    private var _changes: ChangeSet<T>
 
-    constructor(capacity: Int = -1) {
-        innerList = if (capacity > 0) ArrayList(capacity) else ArrayList()
+    init {
+        _innerList = items.toMutableList()
+        _changes = ChangeSet(emptyList())
+
+        if (_innerList.any())
+            _changes.add(Change(ListChangeReason.AddRange, _innerList.toList()))
     }
 
-    constructor(items: Iterable<T>) {
-        innerList = items.toMutableList()
+//    constructor(capacity: Int = -1) {
+//        innerList = if (capacity > 0) ArrayList(capacity) else ArrayList()
+//    }
 
-        if (innerList.any())
-            changes.add(Change(ListChangeReason.AddRange, innerList.toList()))
-    }
 
-    constructor(list: ChangeAwareList<T>, copyChanges: Boolean) {
-        innerList = list.innerList.toMutableList()
-
+    constructor(list: ChangeAwareList<T>, copyChanges: Boolean): this(list._innerList) {
         if (copyChanges)
-            changes = ChangeSet(list.changes)
+            _changes = ChangeSet(list._changes)
     }
 
     override val size: Int
-        get() = innerList.size
+        get() = _innerList.size
 
     fun captureChanges(): IChangeSet<T> {
         var retValue: ChangeSet<T>
         synchronized(lock) {
-            if (changes.count() == 0)
+            if (_changes.count() == 0)
                 return ChangeSet.empty()
 
-            retValue = changes
+            retValue = _changes
             val totalChanges = retValue.totalChanges
-            if (innerList.count() == 0 && retValue.removes == totalChanges && totalChanges > 1) {
+            if (_innerList.count() == 0 && retValue.removes == totalChanges && totalChanges > 1) {
                 val removed = retValue.unified().map { it.current }
                 retValue = ChangeSet(listOf(Change(ListChangeReason.Clear, removed)))
             }
@@ -50,7 +50,7 @@ open class ChangeAwareList<T> : IExtendedList<T> {
      */
     internal fun clearChanges() {
         synchronized(lock) {
-            changes = ChangeSet(emptyList())
+            _changes = ChangeSet(emptyList())
         }
     }
 
@@ -58,26 +58,27 @@ open class ChangeAwareList<T> : IExtendedList<T> {
 
     private val last: Change<T>?
         get() = synchronized(lock) {
-            if (changes.size == 0) null else changes[changes.size - 1]
+            if (_changes.size == 0) null else _changes[_changes.size - 1]
         }
 
     override fun add(index: Int, item: T) {
-        require(index in 0..innerList.size + 1)
+        require(index in 0.._innerList.size + 1)
 
         synchronized(lock) {
             val last = last
 
             if (last != null && last.reason == ListChangeReason.Add) {
-                val firstOfBatch = changes.size - 1;
+                val firstOfBatch = _changes.size - 1;
                 val previousItem = last.item
 
                 if (index == previousItem.currentIndex)
-                    changes[firstOfBatch] = Change(ListChangeReason.AddRange, listOf(item, previousItem.current), index)
+                    _changes[firstOfBatch] =
+                        Change(ListChangeReason.AddRange, listOf(item, previousItem.current), index)
                 else if (index == previousItem.currentIndex + 1)
-                    changes[firstOfBatch] =
+                    _changes[firstOfBatch] =
                         Change(ListChangeReason.AddRange, listOf(previousItem.current, item), previousItem.currentIndex)
                 else
-                    changes.add(Change(ListChangeReason.Add, item, index))
+                    _changes.add(Change(ListChangeReason.Add, item, index))
 
             } else if (last != null && last.reason == ListChangeReason.AddRange) {
                 val range = last.range
@@ -86,7 +87,7 @@ open class ChangeAwareList<T> : IExtendedList<T> {
                 val isPartOfRange = index in min..max
 
                 if (!isPartOfRange)
-                    changes.add(Change(ListChangeReason.Add, item, index))
+                    _changes.add(Change(ListChangeReason.Add, item, index))
                 else {
                     var insertPosition = index - range.index
                     if (insertPosition < 0)
@@ -100,25 +101,14 @@ open class ChangeAwareList<T> : IExtendedList<T> {
                         range.setStartingIndex(index)
                 }
             } else
-                changes.add(Change(ListChangeReason.Add, item, index))
+                _changes.add(Change(ListChangeReason.Add, item, index))
 
-            innerList.add(index, item)
+            _innerList.add(index, item)
         }
     }
 
-    fun addAll(index: Int, items: Iterable<T>): Boolean {
-        val args = Change(ListChangeReason.AddRange, items, index)
-
-        if (args.range.isEmpty()) return false
-
-        synchronized(lock) {
-            changes.add(args)
-            innerList.addAll(index, args.range)
-        }
-
-        onInsertItems(index, args.range)
-
-        return true
+    override fun addAll(index: Int, items: Iterable<T>) {
+        addAll(index, items.toList())
     }
     //endregion
 
@@ -126,7 +116,7 @@ open class ChangeAwareList<T> : IExtendedList<T> {
 
     override fun add(item: T): Boolean =
         synchronized(lock) {
-            this.add(innerList.size, item)
+            this.add(_innerList.size, item)
             true
         }
 
@@ -137,7 +127,7 @@ open class ChangeAwareList<T> : IExtendedList<T> {
         require(index >= 0)
 
         synchronized(lock) {
-            if (index > innerList.size)
+            if (index > _innerList.size)
                 throw IndexOutOfBoundsException("index cannot be greater than the size of the collection")
 
             removeItem(index)
@@ -148,7 +138,7 @@ open class ChangeAwareList<T> : IExtendedList<T> {
 
     override fun remove(item: T): Boolean =
         synchronized(lock) {
-            val index = innerList.indexOf(item)
+            val index = _innerList.indexOf(item)
             if (index < 0)
                 false
             else {
@@ -157,19 +147,19 @@ open class ChangeAwareList<T> : IExtendedList<T> {
             }
         }
 
-    fun removeAll(index: Int, count: Int) {
+    override fun removeAll(index: Int, count: Int) {
         val args: Change<T>
         synchronized(lock) {
             val toIndex = index + count
-            if (index >= innerList.size || toIndex > innerList.size)
+            if (index >= _innerList.size || toIndex > _innerList.size)
                 throw IndexOutOfBoundsException("index")
 
-            val toRemove = innerList.drop(index).take(count).toList()
+            val toRemove = _innerList.drop(index).take(count).toList()
             if (toRemove.isEmpty()) return
 
             args = Change(ListChangeReason.RemoveRange, toRemove, index)
-            changes.add(args)
-            innerList.subList(index, toIndex).clear()
+            _changes.add(args)
+            _innerList.subList(index, toIndex).clear()
         }
 
         onRemoveItems(index, args.range)
@@ -177,7 +167,7 @@ open class ChangeAwareList<T> : IExtendedList<T> {
 
     protected fun removeItem(index: Int) =
         synchronized(lock) {
-            val item = innerList[index]
+            val item = _innerList[index]
             removeItem(index, item)
         }
 
@@ -185,23 +175,23 @@ open class ChangeAwareList<T> : IExtendedList<T> {
         require(index >= 0)
 
         synchronized(lock) {
-            if (index > innerList.size)
+            if (index > _innerList.size)
                 throw IllegalArgumentException("index cannot be greater than the size of the collection")
 
             val last = last
             when (last?.reason) {
                 ListChangeReason.Remove -> {
-                    val firstOfBatch = changes.size - 1
+                    val firstOfBatch = _changes.size - 1
                     val previousItem = last.item
 
                     when (index) {
-                        previousItem.currentIndex -> changes[firstOfBatch] =
+                        previousItem.currentIndex -> _changes[firstOfBatch] =
                             Change(ListChangeReason.RemoveRange, listOf(previousItem.current, item), index)
                         previousItem.currentIndex - 1
                             //Nb: double check this one as it is the same as clause above. Can it be correct?
-                        -> changes[firstOfBatch] =
+                        -> _changes[firstOfBatch] =
                             Change(ListChangeReason.RemoveRange, listOf(item, previousItem.current), index)
-                        else -> changes.add(Change(ListChangeReason.Remove, item, index))
+                        else -> _changes.add(Change(ListChangeReason.Remove, item, index))
                     }
                 }
                 ListChangeReason.RemoveRange -> {
@@ -212,27 +202,28 @@ open class ChangeAwareList<T> : IExtendedList<T> {
                         index
                             //removed in order
                         -> range.add(item)
-                        index - 1 -> changes.add(Change(ListChangeReason.Remove, item, index))
+                        index - 1 -> _changes.add(Change(ListChangeReason.Remove, item, index))
                         index + 1 -> {
                             //removed in reverse order
                             range.add(0, item)
                             range.setStartingIndex(index)
                         }
-                        else -> changes.add(Change(ListChangeReason.Remove, item, index))
+                        else -> _changes.add(Change(ListChangeReason.Remove, item, index))
                     }
                 }
                 else -> {
-                    changes.add(Change(ListChangeReason.Remove, item, index))
+                    _changes.add(Change(ListChangeReason.Remove, item, index))
                 }
             }
 
-            innerList.removeAt(index)
+            _innerList.removeAt(index)
         }
     }
 
-    override fun contains(element: T): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun contains(element: T): Boolean =
+        synchronized(lock) {
+            _innerList.contains(element)
+        }
 
     override fun containsAll(elements: Collection<T>): Boolean {
         TODO("Not yet implemented")
@@ -242,15 +233,15 @@ open class ChangeAwareList<T> : IExtendedList<T> {
         TODO("Not yet implemented")
     }
 
-    fun addAll(elements: Iterable<T>): Boolean {
+    override fun addAll(elements: Iterable<T>): Boolean {
         val args = Change(ListChangeReason.AddRange, elements)
 
         if (args.range.isEmpty())
             return false
 
         synchronized(lock) {
-            innerList.addAll(args.range)
-            changes.add(args)
+            _innerList.addAll(args.range)
+            _changes.add(args)
             return true
         }
     }
@@ -259,10 +250,10 @@ open class ChangeAwareList<T> : IExtendedList<T> {
         require(index >= 0)
 
         synchronized(lock) {
-            if (index > innerList.size)
+            if (index > _innerList.size)
                 throw IllegalArgumentException("index cannot be greater than the size of the collection")
 
-            changes.add(Change(ListChangeReason.Refresh, innerList[index], index))
+            _changes.add(Change(ListChangeReason.Refresh, _innerList[index], index))
         }
     }
 
@@ -271,20 +262,20 @@ open class ChangeAwareList<T> : IExtendedList<T> {
         if (index < 0) return false
 
         synchronized(lock) {
-            changes.add(Change(ListChangeReason.Refresh, item, index))
+            _changes.add(Change(ListChangeReason.Refresh, item, index))
         }
 
         return true
     }
 
-    override fun indexOf(item: T): Int =
+    fun indexOf(item: T): Int =
         synchronized(lock) {
-            innerList.indexOf(item)
+            _innerList.indexOf(item)
         }
 
     override operator fun iterator(): MutableIterator<T> =
         synchronized(lock) {
-            innerList.toMutableList().iterator()
+            _innerList.toMutableList().iterator()
         }
 
     //endregion
@@ -296,15 +287,15 @@ open class ChangeAwareList<T> : IExtendedList<T> {
             throw IllegalArgumentException("destination cannot be negative")
 
         synchronized(lock) {
-            if (original > innerList.size)
+            if (original > _innerList.size)
                 throw IllegalArgumentException("original cannot be greater than the size of the collection")
-            if (destination > innerList.size)
+            if (destination > _innerList.size)
                 throw IllegalArgumentException("destination cannot be greater than the size of the collection")
 
-            val item = innerList[original]
-            innerList.removeAt(original)
-            innerList.add(destination, item)
-            changes.add(Change(item, destination, original))
+            val item = _innerList[original]
+            _innerList.removeAt(original)
+            _innerList.add(destination, item)
+            _changes.add(Change(item, destination, original))
         }
     }
 
@@ -314,33 +305,55 @@ open class ChangeAwareList<T> : IExtendedList<T> {
 
     protected open fun onRemoveItems(startIndex: Int, items: Collection<T>) {}
 
-    override fun get(index: Int): T =
+    fun get(index: Int): T =
         synchronized(lock) {
-            innerList[index]
+            _innerList[index]
         }
 
-    override fun lastIndexOf(element: T): Int {
-        TODO("Not yet implemented")
-    }
+    fun addAll(index: Int, elements: Collection<T>): Boolean {
+        val args = Change(ListChangeReason.AddRange, elements, index)
+        if(args.range.isEmpty())
+            return false
 
-    override fun addAll(index: Int, elements: Collection<T>): Boolean =
-        TODO("Not yet implemented")
+        synchronized(lock){
+            _changes.add(args)
+            _innerList.addAll(index, args.range)
+        }
+
+        onInsertItems(index, args.range)
+
+        return true
+    }
 
     override fun addAll(elements: Collection<T>): Boolean {
-        TODO("Not yet implemented")
+        val args = Change(ListChangeReason.AddRange, elements)
+
+        if (args.range.isEmpty())
+            return false
+
+        synchronized(lock) {
+            _changes.add(args)
+            _innerList.addAll(args.range)
+        }
+
+        return true
     }
 
-    override fun clear() {
-        TODO("Not yet implemented")
-    }
+    override fun clear() =
+        synchronized(lock) {
+            if (_innerList.size == 0)
+                return@synchronized
 
-    override fun listIterator(): MutableListIterator<T> {
-        TODO("Not yet implemented")
-    }
+            val toRemove = _innerList.toList()
+            _changes.add(Change(ListChangeReason.Clear, toRemove))
+            _innerList.clear()
+        }
 
-    override fun listIterator(index: Int): MutableListIterator<T> {
-        TODO("Not yet implemented")
-    }
+
+    fun subList(fromIndex: Int, toIndex: Int): MutableList<T> =
+        synchronized(lock) {
+            ArrayList(_innerList.subList(fromIndex, toIndex))
+        }
 
     override fun removeAll(elements: Collection<T>): Boolean {
         TODO("Not yet implemented")
@@ -350,12 +363,23 @@ open class ChangeAwareList<T> : IExtendedList<T> {
         TODO("Not yet implemented")
     }
 
-    override fun set(index: Int, element: T): T {
-        TODO("Not yet implemented")
-    }
+    override fun set(index: Int, element: T): T =
+        setItem(index, element)
 
-    override fun subList(fromIndex: Int, toIndex: Int): MutableList<T> =
-        synchronized(lock) {
-            ArrayList(innerList.subList(fromIndex, toIndex))
+    protected open fun setItem(index: Int, element: T): T {
+        if(index<0) throw IllegalArgumentException("index cannot be negative.")
+
+        var previous: T
+        synchronized(lock){
+            if(index>_innerList.size) throw IllegalArgumentException("index cannot be greater than the size of the collection.")
+
+            previous = _innerList[index]
+            _changes.add(Change(ListChangeReason.Replace, element, previous, index, index))
+            _innerList[index] = element
         }
+
+        onSetItem(index, element, previous)
+
+        return previous
+    }
 }

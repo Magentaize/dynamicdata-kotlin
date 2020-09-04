@@ -1,16 +1,13 @@
 package dynamicdata.list
 
-class ChangeSet<T> : ArrayList<Change<T>>, IChangeSet<T> {
+class ChangeSet<T>(items: Collection<Change<T>>): ArrayList<Change<T>>(items), IChangeSet<T> {
     companion object {
-        private val INSTANCE: ChangeSet<Any?> = ChangeSet(emptyList())
+        private val INSTANCE = ChangeSet<Any>(emptyList())
 
         fun <T> empty(): IChangeSet<T> {
             return INSTANCE as IChangeSet<T>
         }
     }
-
-    //constructor()
-    constructor(items: Collection<Change<T>>) : super(items)
 
     override val size: Int
         get() = super.size
@@ -46,4 +43,8 @@ class ChangeSet<T> : ArrayList<Change<T>>, IChangeSet<T> {
 
     override val totalChanges: Int
         get() = adds + removes + replaced + moves
+
+    override fun toString(): String {
+        return "ChangeSet<>. size=$size"
+    }
 }

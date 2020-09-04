@@ -15,6 +15,9 @@ data class ItemChange<T>
         }
     }
 
+    constructor(reason: ListChangeReason, current: T, currentIndex: Int)
+            : this(reason, current, null, currentIndex, -1)
+
     override fun toString(): String =
         "Current: $current, Previous: $previous"
 }

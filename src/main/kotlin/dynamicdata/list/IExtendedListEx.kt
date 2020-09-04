@@ -3,13 +3,13 @@ package dynamicdata.list
 import dynamicdata.kernel.duplicates
 import dynamicdata.kernel.indexOfMany
 
-fun <T> MutableList<T>.clone(changes: IChangeSet<T>) =
+fun <T> IExtendedList<T>.clone(changes: IChangeSet<T>) =
     clone(changes as Iterable<Change<T>>)
 
-fun <T> MutableList<T>.clone(changes: Iterable<Change<T>>) =
+fun <T> IExtendedList<T>.clone(changes: Iterable<Change<T>>) =
     changes.forEach { clone(it) }
 
-private fun <T> MutableList<T>.clone(item: Change<T>) {
+private fun <T> IExtendedList<T>.clone(item: Change<T>) {
     val changeAware = this as? ChangeAwareList<T>
 
     when (item.reason) {
@@ -60,8 +60,8 @@ private fun <T> MutableList<T>.clone(item: Change<T>) {
             //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
             //if (item.Range.Index < 0)
             //    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
-            if (item.range.index >= 0 && (this is IExtendedList<T> || this is MutableList<T>)) {
-                this.removeRange(item.range.index, item.range.size)
+            if (item.range.index >= 0 && (this is IExtendedList<*> || this is MutableCollection<T>)) {
+                this.removeAll(item.range.index, item.range.size)
             } else {
                 this.removeAll(item.range)
             }
@@ -70,7 +70,7 @@ private fun <T> MutableList<T>.clone(item: Change<T>) {
             if (change.currentIndex < 0)
                 throw UnspecifiedIndexException("Cannot move as an index was not specified")
 
-            if (this is IExtendedList<T>) {
+            if (this is IExtendedList<*>) {
                 this.move(change.previousIndex, change.currentIndex)
             } else {
                 //check this works whatever the index is
@@ -81,11 +81,7 @@ private fun <T> MutableList<T>.clone(item: Change<T>) {
     }
 }
 
-private fun <T> MutableList<T>.removeRange(index: Int, count: Int) {
-    TODO()
-}
-
-fun <T> MutableList<T>.addOrInsertRange(items: Iterable<T>, index: Int) {
+fun <T> IExtendedList<T>.addOrInsertRange(items: Iterable<T>, index: Int) {
     if (index >= 0) {
         this.addAll(index, items.toList())
     } else {
@@ -93,14 +89,14 @@ fun <T> MutableList<T>.addOrInsertRange(items: Iterable<T>, index: Int) {
     }
 }
 
-fun <T> MutableList<T>.clearOrRemoveMany(change: Change<T>) {
+fun <T> IExtendedList<T>.clearOrRemoveMany(change: Change<T>) {
     if (this.size == change.range.size)
         this.clear()
     else
         this.removeMany(change.range)
 }
 
-fun <T> MutableList<T>.removeMany(itemsToRemove: Iterable<T>) {
+fun <T> IExtendedList<T>.removeMany(itemsToRemove: Iterable<T>) {
     val toRemoveList = itemsToRemove.toList()
 
     // match all indicies and and remove in reverse as it is more efficient
@@ -121,7 +117,7 @@ fun <T> MutableList<T>.removeMany(itemsToRemove: Iterable<T>) {
         toRemove.forEach { this.removeAt(it.index) }
 }
 
-fun <T> MutableList<T>.replaceOrAdd(original: T, replaceWith: T) {
+fun <T> IExtendedList<T>.replaceOrAdd(original: T, replaceWith: T) {
     val index = this.indexOf(original)
     if (index == -1)
         this.add(replaceWith)

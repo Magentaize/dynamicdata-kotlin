@@ -35,4 +35,9 @@ data class Change<T>(
         if (reason == ListChangeReason.Refresh && currentIndex < 0)
             throw  IllegalArgumentException("For ChangeReason.Refresh, must supply and index")
     }
+
+    override fun toString(): String {
+        return if (range.isEmpty()) "$reason. current: ${item.current}, previous: ${item.previous}"
+        else "$reason. ${range.size} changes"
+    }
 }

@@ -1,8 +1,8 @@
 package dynamicdata.list
 
-class ChangeSet<T>(items: Collection<Change<T>>): ArrayList<Change<T>>(items), IChangeSet<T> {
+class ChangeSet<T>(items: Collection<Change<T>> = emptyList()): ArrayList<Change<T>>(items), IChangeSet<T> {
     companion object {
-        private val INSTANCE = ChangeSet<Any>(emptyList())
+        private val INSTANCE = ChangeSet<Any>()
 
         fun <T> empty(): IChangeSet<T> {
             return INSTANCE as IChangeSet<T>

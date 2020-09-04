@@ -10,6 +10,7 @@ import dynamicdata.list.internal.Transformer
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.schedulers.Schedulers
 import java.beans.PropertyChangeListener
 import java.util.concurrent.TimeUnit
 
@@ -128,3 +129,33 @@ fun <T> Observable<IChangeSet<T>>.clone(target: IExtendedList<T>): Observable<IC
     TODO()
     //return this.doOnEach{ target.clone(it)}
 }
+
+fun <T> Observable<IChangeSet<T>>.bufferIf(
+    pauseIfTrueSelector: Observable<Boolean>,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    bufferIf(pauseIfTrueSelector, false, scheduler)
+
+fun <T> Observable<IChangeSet<T>>.bufferIf(
+    pauseIfTrueSelector: Observable<Boolean>,
+    initialPauseState: Boolean,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    bufferIf(pauseIfTrueSelector, initialPauseState, 0L, TimeUnit.NANOSECONDS, scheduler)
+
+fun <T> Observable<IChangeSet<T>>.bufferIf(
+    pauseIfTrueSelector: Observable<Boolean>,
+    timeOut: Long,
+    unit: TimeUnit,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    bufferIf(pauseIfTrueSelector, false, timeOut, unit, scheduler)
+
+fun <T> Observable<IChangeSet<T>>.bufferIf(
+    pauseIfTrueSelector: Observable<Boolean>,
+    initialPauseState: Boolean,
+    timeOut: Long = 0L,
+    unit: TimeUnit = TimeUnit.NANOSECONDS,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    BufferIf(this, pauseIfTrueSelector, initialPauseState, timeOut, unit, scheduler).run()

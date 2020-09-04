@@ -1,5 +1,7 @@
 package dynamicdata.list
 
+import dynamicdata.kernel.Optional
+
 open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<T> {
     private val lock = Any()
     private val _innerList: MutableList<T>
@@ -268,7 +270,7 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
         return true
     }
 
-    fun indexOf(item: T): Int =
+    override fun indexOf(item: T): Int =
         synchronized(lock) {
             _innerList.indexOf(item)
         }
@@ -305,12 +307,12 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
 
     protected open fun onRemoveItems(startIndex: Int, items: Collection<T>) {}
 
-    operator fun get(index: Int): T =
+    override operator fun get(index: Int): T =
         synchronized(lock) {
             _innerList[index]
         }
 
-    fun addAll(index: Int, elements: Collection<T>): Boolean {
+    override fun addAll(index: Int, elements: Collection<T>): Boolean {
         val args = Change(ListChangeReason.AddRange, elements, index)
         if(args.range.isEmpty())
             return false
@@ -350,7 +352,7 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
         }
 
 
-    fun subList(fromIndex: Int, toIndex: Int): MutableList<T> =
+    override fun subList(fromIndex: Int, toIndex: Int): MutableList<T> =
         synchronized(lock) {
             ArrayList(_innerList.subList(fromIndex, toIndex))
         }
@@ -374,12 +376,24 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
             if(index>_innerList.size) throw IllegalArgumentException("index cannot be greater than the size of the collection.")
 
             previous = _innerList[index]
-            _changes.add(Change(ListChangeReason.Replace, element, previous, index, index))
+            _changes.add(Change(ListChangeReason.Replace, element, Optional.of(previous), index, index))
             _innerList[index] = element
         }
 
         onSetItem(index, element, previous)
 
         return previous
+    }
+
+    override fun lastIndexOf(element: T): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun listIterator(): MutableListIterator<T> {
+        TODO("Not yet implemented")
+    }
+
+    override fun listIterator(index: Int): MutableListIterator<T> {
+        TODO("Not yet implemented")
     }
 }

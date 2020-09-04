@@ -32,7 +32,7 @@ internal class FilterStatic<T>(
                     val change = item.item
                     val match = predicate(change.current)
                     if (match)
-                        filtered.replaceOrAdd(change.previous!!, change.current)
+                        filtered.replaceOrAdd(change.previous.value, change.current)
                     else
                         filtered.remove(change.previous)
                 }

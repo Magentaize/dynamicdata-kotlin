@@ -60,7 +60,7 @@ private fun <T> MutableList<T>.clone(item: Change<T>) {
             //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
             //if (item.Range.Index < 0)
             //    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
-            if (item.range.index >= 0 && (this is IExtendedList<*> || this is MutableCollection<T>)) {
+            if (item.range.index >= 0 && (this is IExtendedList<*>)) {
                 this.removeAll(item.range.index, item.range.size)
             } else {
                 this.removeAll(item.range)

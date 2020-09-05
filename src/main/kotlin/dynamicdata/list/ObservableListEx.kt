@@ -126,6 +126,9 @@ fun <T> Observable<IChangeSet<T>>.clone(target: IExtendedList<T>): Observable<IC
     //return this.doOnEach{ target.clone(it)}
 }
 
+fun <T, R> Observable<IChangeSet<T>>.cast(selector: (T) -> R): Observable<IChangeSet<R>> =
+    map { it.transform(selector) }
+
 fun <T> Observable<IChangeSet<T>>.skipInitial(): Observable<IChangeSet<T>> =
     deferUntilLoaded().skip(1)
 

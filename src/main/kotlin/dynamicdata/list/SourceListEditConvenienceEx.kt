@@ -20,3 +20,6 @@ fun <T> ISourceList<T>.removeRange(index: Int, count: Int) =
 
 fun <T> ISourceList<T>.clear() =
     edit { it.clear() }
+
+fun <T> ISourceList<T>.replaceAt(index: Int, item: T) =
+    edit { it[index] = item }

@@ -41,10 +41,12 @@ internal class StatusMonitor<T>(
                 .distinctUntilChanged()
                 .subscribeBy(emitter)
 
-            Disposable.fromAction {
+            val dispose = Disposable.fromAction {
                 statusSubject.onComplete()
                 monitor.dispose()
                 subscription.dispose()
             }
+
+            emitter.setDisposable(dispose)
         }
 }

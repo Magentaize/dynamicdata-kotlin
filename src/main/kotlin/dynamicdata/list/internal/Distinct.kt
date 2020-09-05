@@ -16,13 +16,15 @@ internal class Distinct<T, R>(
             val valueCounters = mutableMapOf<R, Int>()
             val result = ChangeAwareList<R>()
 
-            _source.transform<T, ItemWithMatch<T, R>>({ t, prev, _ ->
+            val d = _source.transform<T, ItemWithMatch<T, R>>({ t, prev, _ ->
                 val previousValue = prev.convertOr({ it.value }, { null as R })
                 ItemWithMatch(t, _selector(t), previousValue)
             }, true)
                 .map { changes -> process(valueCounters, result, changes) }
                 .notEmpty()
                 .subscribeBy(emitter)
+
+            emitter.setDisposable(d)
         }
 
     private fun process(

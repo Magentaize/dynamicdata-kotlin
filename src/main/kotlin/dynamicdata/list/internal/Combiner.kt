@@ -33,6 +33,8 @@ internal class Combiner<T>(
                         })
                 }
             }
+
+            emitter.setDisposable(disposable)
         }
 
     private fun cloneSourceList(tracker: ReferenceCountTracker<T>, changes: IChangeSet<T>) =
@@ -59,16 +61,20 @@ internal class Combiner<T>(
             when (change.reason) {
                 in setOf(ListChangeReason.Add, ListChangeReason.Remove) ->
                     updateItemMembership(change.current, sourceLists, resultList)
+
                 ListChangeReason.Replace -> {
                     updateItemMembership(change.previous.value, sourceLists, resultList)
                     updateItemMembership(change.current, sourceLists, resultList)
                 }
+
                 // Pass through refresh changes:
                 ListChangeReason.Refresh ->
                     resultList.refresh(change.current)
+
                 // A move does not affect contents and so can be ignored:
-                ListChangeReason.Moved -> {
-                }
+                ListChangeReason.Moved ->
+                    return@forEach
+
                 // These should not occur as they are replaced by the Flatten operator:
                 //case ListChangeReason.AddRange:
                 //case ListChangeReason.RemoveRange:

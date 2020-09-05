@@ -21,10 +21,12 @@ internal class OnBeingRemoved<T>(
                 .doOnEach({ registerForRemoval(items, it) }, { e -> emitter.onError(e) })
                 .subscribeBy(emitter)
 
-            Disposable.fromAction {
+            val d = Disposable.fromAction {
                 subscription.dispose()
                 items.forEach(_callback)
             }
+
+            emitter.setDisposable(d)
         }
 
     private fun registerForRemoval(items: MutableList<T>, changes: IChangeSet<T>) {

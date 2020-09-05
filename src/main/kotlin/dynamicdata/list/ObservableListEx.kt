@@ -52,6 +52,13 @@ fun <T : PropertyChangeListener, R> Observable<IChangeSet<T>>.autoRefresh(
 //    AutoRefresh(this, evaluator, bufferTimeSpan, unit, scheduler).run()
 
 fun <T, R> Observable<IChangeSet<T>>.transform(
+    transformFactory: (T) -> R
+): Observable<IChangeSet<R>> =
+    this.transform(
+        { t, _, _ -> transformFactory(t) }
+    )
+
+fun <T, R> Observable<IChangeSet<T>>.transform(
     transformFactory: (T) -> R,
     transformOnRefresh: Boolean = false
 ): Observable<IChangeSet<R>> =
@@ -114,6 +121,12 @@ private fun <T> Observable<IChangeSet<T>>.combine(
     val items = listOf(this).union(others.toList()).toList()
     return Combiner(items, type).run()
 }
+
+fun <T> IObservableList<Observable<IChangeSet<T>>>.and(): Observable<IChangeSet<T>> =
+    combine(CombineOperator.And)
+
+private fun <T> IObservableList<Observable<IChangeSet<T>>>.combine(type: CombineOperator): Observable<IChangeSet<T>> =
+    DynamicCombiner(this, type).run()
 
 fun <T> Observable<IChangeSet<T>>.subscribeMany(subscriptionFactory: (T) -> Disposable): Observable<IChangeSet<T>> =
     SubscribeMany(this, subscriptionFactory).run()
@@ -189,3 +202,15 @@ fun <T> Observable<IChangeSet<T>>.bufferIf(
 fun <T, R> Observable<IChangeSet<T>>.distinctValues(selector: (T) -> R): Observable<IChangeSet<R>> =
     Distinct(this, selector).run()
 
+fun <T> Observable<IChangeSet<T>>.whereReasonsAre(vararg reasons: ListChangeReason): Observable<IChangeSet<T>> {
+    require(reasons.isNotEmpty()) { "Must enter at least 1 reason" }
+
+    val matches = hashSetOf(*reasons)
+    return map<IChangeSet<T>> {
+        val filtered = it.filter { change -> matches.contains(change.reason) }.yieldWithoutIndex()
+        ChangeSet(filtered.toList())
+    }.notEmpty()
+}
+
+fun <T> Observable<IChangeSet<T>>.forEachItemChange(action: (ItemChange<T>) -> Unit): Observable<IChangeSet<T>> =
+    doOnEach { it.value.flatten().forEach(action) }

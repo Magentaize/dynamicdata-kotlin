@@ -73,7 +73,7 @@ internal class BufferIf<T>(
 
             val connected = bufferSelector.connect()
 
-            Disposable.fromAction {
+            val dispose = Disposable.fromAction {
                 connected.dispose()
                 pause.dispose()
                 resume.dispose()
@@ -81,5 +81,7 @@ internal class BufferIf<T>(
                 timeoutSubject.onComplete()
                 timeoutSubscriber.dispose()
             }
+
+            emitter.setDisposable(dispose)
         }
 }

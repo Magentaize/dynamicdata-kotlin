@@ -3,6 +3,10 @@ package dynamicdata.list
 import dynamicdata.kernel.convert
 import dynamicdata.list.linq.ItemChangeEnumerator
 import dynamicdata.list.linq.UnifiedChangeEnumerator
+import dynamicdata.list.linq.WithoutIndexEnumerator
+
+fun <T> Iterable<Change<T>>.yieldWithoutIndex(): Iterable<Change<T>> =
+    WithoutIndexEnumerator(this)
 
 internal fun <T> IChangeSet<T>.unified() =
     UnifiedChangeEnumerator(this)

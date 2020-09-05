@@ -16,14 +16,16 @@ internal class SubscribeMany<T>(
         Observable.create { emitter ->
             val shared = _source.publish()
             val subscriptions = shared
-                .transform({ t -> _subscriptionFactory(t) })
+                .transform { t -> _subscriptionFactory(t) }
                 .disposeMany()
                 .subscribe()
 
-            CompositeDisposable(
+            val d = CompositeDisposable(
                 subscriptions,
                 shared.subscribeBy(emitter),
                 shared.connect()
             )
+
+            emitter.setDisposable(d)
         }
 }

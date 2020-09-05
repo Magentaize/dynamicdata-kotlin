@@ -117,7 +117,9 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
                 }
 
                 val source = changes.doFinally(it::onComplete)
-                source.subscribeBy(it)
+                val dispose = source.subscribeBy(it)
+
+                it.setDisposable(dispose)
             }
         }
 

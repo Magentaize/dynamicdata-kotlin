@@ -15,7 +15,7 @@ internal class Combiner<T>(
     private val _lock = Any()
 
     fun run(): Observable<IChangeSet<T>> =
-        Observable.unsafeCreate { observer ->
+        Observable.create { emitter ->
             val disposable = CompositeDisposable()
             val resultList = ChangeAwareListWithRefCounts<T>()
 
@@ -29,7 +29,7 @@ internal class Combiner<T>(
 
                             val notifications = updateResultList(changes, sourceLists, resultList)
                             if (notifications.size != 0)
-                                observer.onNext(notifications)
+                                emitter.onNext(notifications)
                         })
                 }
             }

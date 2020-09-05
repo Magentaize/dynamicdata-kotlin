@@ -1,11 +1,12 @@
 package dynamicdata.list.internal
 
 import dynamicdata.kernel.ifHasValue
+import dynamicdata.kernel.subscribeBy
+import dynamicdata.kernel.doOnEach
 import dynamicdata.list.IChangeSet
 import dynamicdata.list.ListChangeReason
 import dynamicdata.list.clone
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable
 
 internal class OnBeingRemoved<T>(
@@ -17,19 +18,8 @@ internal class OnBeingRemoved<T>(
             val items = mutableListOf<T>()
             val subscription = _source
                 .serialize()
-                .doOnEach(object : Observer<IChangeSet<T>> {
-                    override fun onNext(t: IChangeSet<T>) =
-                        registerForRemoval(items, t)
-
-                    override fun onError(e: Throwable?) =
-                        emitter.onError(e)
-
-                    override fun onComplete() {}
-
-                    override fun onSubscribe(d: Disposable) {}
-                }
-                )
-                .subscribe(emitter::onNext, emitter::onError, emitter::onComplete)
+                .doOnEach({ registerForRemoval(items, it) }, { e -> emitter.onError(e) })
+                .subscribeBy(emitter)
 
             Disposable.fromAction {
                 subscription.dispose()

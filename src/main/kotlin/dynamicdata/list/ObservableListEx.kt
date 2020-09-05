@@ -95,10 +95,6 @@ fun <T> Observable<IChangeSet<T>>.disposeMany(): Observable<IChangeSet<T>> =
 fun <T> Observable<IChangeSet<T>>.onItemRemoved(action: (T) -> Unit): Observable<IChangeSet<T>> =
     OnBeingRemoved(this, action).run()
 
-fun <T> Observable<List<IChangeSet<T>>>.flattenBufferResult(): Observable<IChangeSet<T>> =
-    this.filter { it.isNotEmpty() }
-        .map { ChangeSet(it.flatten()) }
-
 fun <T> Observable<IChangeSet<T>>.and(vararg others: Observable<IChangeSet<T>>) =
     combine(CombineOperator.And, *others)
 
@@ -130,6 +126,33 @@ fun <T> Observable<IChangeSet<T>>.clone(target: IExtendedList<T>): Observable<IC
     //return this.doOnEach{ target.clone(it)}
 }
 
+fun <T> Observable<IChangeSet<T>>.skipInitial(): Observable<IChangeSet<T>> =
+    deferUntilLoaded().skip(1)
+
+//fun <T> Observable<IChangeSet<T>>.deferUntilLoaded(): IObservableList<T> =
+//    connect
+
+fun <T> Observable<IChangeSet<T>>.deferUntilLoaded(): Observable<IChangeSet<T>> =
+    DeferUntilLoaded(this).run()
+
+fun <T> Observable<List<IChangeSet<T>>>.flattenBufferResult(): Observable<IChangeSet<T>> =
+    this.filter { it.isNotEmpty() }
+        .map { ChangeSet(it.flatten()) }
+
+fun <T> Observable<IChangeSet<T>>.bufferInitial(
+    timespan: Long,
+    unit: TimeUnit,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    deferUntilLoaded()
+        .publish { shared ->
+            val initial = shared.buffer(timespan, unit, scheduler)
+                .flattenBufferResult()
+                .take(1)
+
+            initial.concatWith(shared)
+        }
+
 fun <T> Observable<IChangeSet<T>>.bufferIf(
     pauseIfTrueSelector: Observable<Boolean>,
     scheduler: Scheduler = Schedulers.computation()
@@ -145,17 +168,17 @@ fun <T> Observable<IChangeSet<T>>.bufferIf(
 
 fun <T> Observable<IChangeSet<T>>.bufferIf(
     pauseIfTrueSelector: Observable<Boolean>,
-    timeOut: Long,
+    timespan: Long,
     unit: TimeUnit,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<IChangeSet<T>> =
-    bufferIf(pauseIfTrueSelector, false, timeOut, unit, scheduler)
+    bufferIf(pauseIfTrueSelector, false, timespan, unit, scheduler)
 
 fun <T> Observable<IChangeSet<T>>.bufferIf(
     pauseIfTrueSelector: Observable<Boolean>,
     initialPauseState: Boolean,
-    timeOut: Long = 0L,
+    timespan: Long = 0L,
     unit: TimeUnit = TimeUnit.NANOSECONDS,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<IChangeSet<T>> =
-    BufferIf(this, pauseIfTrueSelector, initialPauseState, timeOut, unit, scheduler).run()
+    BufferIf(this, pauseIfTrueSelector, initialPauseState, timespan, unit, scheduler).run()

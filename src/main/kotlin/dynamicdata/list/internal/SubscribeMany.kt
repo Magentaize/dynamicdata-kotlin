@@ -1,5 +1,6 @@
 package dynamicdata.list.internal
 
+import dynamicdata.kernel.subscribeBy
 import dynamicdata.list.IChangeSet
 import dynamicdata.list.disposeMany
 import dynamicdata.list.transform
@@ -12,7 +13,7 @@ internal class SubscribeMany<T>(
     private val _subscriptionFactory: (T) -> Disposable
 ) {
     fun run(): Observable<IChangeSet<T>> =
-        Observable.create {
+        Observable.create { emitter ->
             val shared = _source.publish()
             val subscriptions = shared
                 .transform({ t -> _subscriptionFactory(t) })
@@ -21,7 +22,7 @@ internal class SubscribeMany<T>(
 
             CompositeDisposable(
                 subscriptions,
-                shared.subscribe(it::onNext, it::onError, it::onComplete),
+                shared.subscribeBy(emitter),
                 shared.connect()
             )
         }

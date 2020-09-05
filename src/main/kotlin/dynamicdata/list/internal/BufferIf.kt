@@ -1,5 +1,6 @@
 package dynamicdata.list.internal
 
+import dynamicdata.kernel.subscribeBy
 import dynamicdata.list.ChangeSet
 import dynamicdata.list.IChangeSet
 import io.reactivex.rxjava3.core.Observable
@@ -14,7 +15,7 @@ internal class BufferIf<T>(
     private val _source: Observable<IChangeSet<T>>,
     private val _pauseIfTrueSelector: Observable<Boolean>,
     private val _initialPauseState: Boolean,
-    private val _timeOut: Long = 0L,
+    private val _timespan: Long = 0L,
     private val _unit: TimeUnit = TimeUnit.NANOSECONDS,
     private val _scheduler: Scheduler = Schedulers.computation()
 ) {
@@ -37,15 +38,11 @@ internal class BufferIf<T>(
                     .subscribe {
                         paused = true
                         //add pause timeout if required
-                        if (_timeOut != 0L) {
+                        if (_timespan != 0L) {
                             timeoutSubscriber.set(
-                                Observable.timer(_timeOut, _unit, _scheduler)
+                                Observable.timer(_timespan, _unit, _scheduler)
                                     .map { false }
-                                    .subscribe(
-                                        timeoutSubject::onNext,
-                                        timeoutSubject::onError,
-                                        timeoutSubject::onComplete
-                                    )
+                                    .subscribeBy(timeoutSubject)
                             )
                         }
                     }

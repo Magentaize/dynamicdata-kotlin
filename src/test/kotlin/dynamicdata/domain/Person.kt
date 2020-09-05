@@ -11,6 +11,10 @@ internal data class Person(
     constructor(firstName: String, lastName: String, age: Int)
             : this("$firstName $lastName", age)
 
+    override fun toString(): String {
+        return "$name. $age"
+    }
+
     override fun propertyChange(evt: PropertyChangeEvent?) {
         TODO("Not yet implemented")
     }

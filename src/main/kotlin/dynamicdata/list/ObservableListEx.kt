@@ -185,3 +185,7 @@ fun <T> Observable<IChangeSet<T>>.bufferIf(
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<IChangeSet<T>> =
     BufferIf(this, pauseIfTrueSelector, initialPauseState, timespan, unit, scheduler).run()
+
+fun <T, R> Observable<IChangeSet<T>>.distinctValues(selector: (T) -> R): Observable<IChangeSet<R>> =
+    Distinct(this, selector).run()
+

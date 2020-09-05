@@ -1,5 +1,6 @@
 package dynamicdata.list
 
+import dynamicdata.kernel.subscribeBy
 import dynamicdata.list.internal.FilterStatic
 import dynamicdata.list.internal.ReaderWriter
 import io.reactivex.rxjava3.core.Observable
@@ -109,14 +110,14 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
     }
 
     override fun connect(predicate: ((T) -> Boolean)?): Observable<IChangeSet<T>> {
-        var observable = Observable.unsafeCreate<IChangeSet<T>> {
+        var observable = Observable.create<IChangeSet<T>> {
             synchronized(lock) {
                 if (readerWriter.items.isNotEmpty()) {
                     it.onNext(ChangeSet(listOf(Change(ListChangeReason.AddRange, readerWriter.items))))
                 }
 
                 val source = changes.doFinally(it::onComplete)
-                return@synchronized source.safeSubscribe(it)
+                source.subscribeBy(it)
             }
         }
 
@@ -147,4 +148,7 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
 
     override val size: Int
         get() = readerWriter.size
+
+    override operator fun iterator(): Iterator<T> =
+        items.iterator()
 }

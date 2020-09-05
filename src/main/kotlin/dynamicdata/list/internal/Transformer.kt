@@ -104,5 +104,9 @@ internal class Transformer<T, R>(
     internal data class TransformedItemContainer<T, R>(
         val source: T,
         val destination: R
-    )
+    ){
+        override fun toString(): String {
+            return super.toString()
+        }
+    }
 }

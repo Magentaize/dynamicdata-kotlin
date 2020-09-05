@@ -2,6 +2,7 @@ package dynamicdata.list
 
 import dynamicdata.kernel.duplicates
 import dynamicdata.kernel.indexOfMany
+import java.lang.IllegalArgumentException
 
 fun <T> MutableList<T>.clone(changes: IChangeSet<T>) =
     clone(changes as Iterable<Change<T>>)
@@ -115,6 +116,14 @@ fun <T> MutableList<T>.removeMany(itemsToRemove: Iterable<T>) {
     else
     //Fast remove because we know the index of all and we remove in order
         toRemove.forEach { this.removeAt(it.index) }
+}
+
+fun <T> MutableList<T>.replace(original: T, replaceWith: T) {
+    val index = this.indexOf(original)
+    if (index == -1)
+        throw IllegalArgumentException("Cannot find index of original item. Either it does not exist in the list or the hashcode has mutated")
+    else
+        this[index] = replaceWith
 }
 
 fun <T> MutableList<T>.replaceOrAdd(original: T, replaceWith: T) {

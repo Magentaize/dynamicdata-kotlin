@@ -1,5 +1,7 @@
 package dynamicdata.kernel
 
+import java.lang.Exception
+
 fun <T, R> Optional<T>.convert(converter: (T) -> R): Optional<R> =
     if (hasValue) Optional.of(converter(value)) else Optional.empty<R>()
 
@@ -19,4 +21,11 @@ fun <T> Optional<T>.ifHasValue(action: (T) -> Unit): OptionalElse {
 
     action(value)
     return OptionalElse.empty()
+}
+
+fun <T> Optional<T>.valueOrThrow(factory: () -> Exception): T {
+    if (hasValue)
+        return value
+
+    throw factory()
 }

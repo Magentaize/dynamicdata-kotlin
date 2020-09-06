@@ -13,8 +13,8 @@ internal class Person(
 ) : INotifyPropertyChanged {
     var age = age
         set(value) {
-            propertyChanged.onNext(PropertyChangedEvent(this, "age"))
             field = value
+            propertyChanged.onNext(PropertyChangedEvent(this, "age"))
         }
 
     constructor(firstName: String, lastName: String, age: Int)

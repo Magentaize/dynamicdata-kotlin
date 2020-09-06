@@ -4,21 +4,15 @@ import dynamicdata.kernel.Optional
 
 open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<T> {
     private val lock = Any()
-    private val _innerList: MutableList<T>
+    private val _innerList: MutableList<T> = items.toMutableList()
     private var _changes: ChangeSet<T>
 
     init {
-        _innerList = items.toMutableList()
         _changes = ChangeSet(emptyList())
 
         if (_innerList.any())
             _changes.add(Change(ListChangeReason.AddRange, _innerList.toList()))
     }
-
-//    constructor(capacity: Int = -1) {
-//        innerList = if (capacity > 0) ArrayList(capacity) else ArrayList()
-//    }
-
 
     constructor(list: ChangeAwareList<T>, copyChanges: Boolean): this(list._innerList) {
         if (copyChanges)
@@ -55,8 +49,6 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
             _changes = ChangeSet(emptyList())
         }
     }
-
-    //region Collection overrides
 
     private val last: Change<T>?
         get() = synchronized(lock) {
@@ -112,9 +104,6 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
     override fun addAll(index: Int, items: Iterable<T>) {
         addAll(index, items.toList())
     }
-    //endregion
-
-    //region IList<T> implementation
 
     override fun add(item: T): Boolean =
         synchronized(lock) {
@@ -279,8 +268,6 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
         synchronized(lock) {
             _innerList.toMutableList().iterator()
         }
-
-    //endregion
 
     override fun move(original: Int, destination: Int) {
         if (original < 0)

@@ -31,11 +31,12 @@ fun <T : INotifyPropertyChanged, R> Observable<IChangeSet<T>>.autoRefresh(
     propertyChangeThrottleTimeUnit: TimeUnit? = null,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<IChangeSet<T>> =
-    autoRefreshOnObservable({ t ->
+    autoRefreshOnObservable({
         if (propertyChangeThrottleTimeSpan == null)
-            t.whenPropertyChanged(accessor, false)
+            it.whenPropertyChanged(accessor, false)
         else
-            t.whenPropertyChanged(accessor, false)
+            it
+                .whenPropertyChanged(accessor, false)
                 .throttleWithTimeout(propertyChangeThrottleTimeSpan, propertyChangeThrottleTimeUnit, scheduler)
     }, bufferTimeSpan, bufferTimeUnit, scheduler)
 
@@ -61,6 +62,14 @@ fun <T, R> Observable<IChangeSet<T>>.transform(
     this.transform(
         { t, _, _ -> transformFactory(t) },
         transformOnRefresh
+    )
+
+@JvmName("transformWithIndex")
+fun <T, R> Observable<IChangeSet<T>>.transform(
+    transformFactory: (T, Int) -> R
+): Observable<IChangeSet<R>> =
+    this.transform(
+        { t, _, idx -> transformFactory(t, idx) }
     )
 
 @JvmName("transformWithIndex")
@@ -137,7 +146,7 @@ fun <T, R> Observable<IChangeSet<T>>.mergeMany(selector: (T) -> Observable<R>): 
     MergeMany(this, selector).run()
 
 fun <T> Observable<IChangeSet<T>>.clone(target: MutableList<T>): Observable<IChangeSet<T>> =
-    doOnEach{ target.clone(it.value)}
+    doOnEach { target.clone(it.value) }
 
 fun <T, R> Observable<IChangeSet<T>>.cast(selector: (T) -> R): Observable<IChangeSet<R>> =
     map { it.transform(selector) }
@@ -217,3 +226,12 @@ fun <T> Observable<IChangeSet<T>>.forEachItemChange(action: (ItemChange<T>) -> U
 
 fun <T> Observable<IChangeSet<T>>.removeIndex(): Observable<IChangeSet<T>> =
     map { ChangeSet(it.yieldWithoutIndex().toList()) }
+
+fun <T> Observable<IChangeSet<T>>.filterItem(predicate: (T) -> Boolean): Observable<IChangeSet<T>> =
+    Filter(this, predicate).run()
+
+fun <T> Observable<IChangeSet<T>>.filterItem(
+    predicate: (T) -> Boolean,
+    policy: ListFilterPolicy = ListFilterPolicy.CalculateDiff
+): Observable<IChangeSet<T>> =
+    Filter(this, predicate, policy).run()

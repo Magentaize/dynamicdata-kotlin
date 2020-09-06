@@ -17,6 +17,9 @@ internal class Transformer<T, R>(
             transform(state, changes)
             state
         }
+            // scan operator in rxjava will emit seed as the first item,
+            // so just drop it
+            .skip(1)
             .map {
                 val changed = it.captureChanges()
                 changed.transform { container -> container.destination }
@@ -104,7 +107,7 @@ internal class Transformer<T, R>(
     internal data class TransformedItemContainer<T, R>(
         val source: T,
         val destination: R
-    ){
+    ) {
         override fun toString(): String {
             return super.toString()
         }

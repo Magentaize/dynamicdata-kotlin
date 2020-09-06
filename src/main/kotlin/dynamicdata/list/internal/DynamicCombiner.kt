@@ -21,7 +21,7 @@ internal class DynamicCombiner<T>(
             //This populates a RefTracker when the original source is subscribed to
             val sourceLists = _source.connect()
                 .serialize()
-                .transform { MergeContainer(it) }
+                .transform { it:Observable<IChangeSet<T>> -> MergeContainer(it) }
                 .asObservableList()
 
             //merge the items back together

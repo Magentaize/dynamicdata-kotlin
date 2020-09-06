@@ -1,6 +1,8 @@
 package dynamicdata.list
 
+import dynamicdata.binding.whenPropertyChanged
 import dynamicdata.cache.internal.CombineOperator
+import dynamicdata.kernel.INotifyPropertyChanged
 import dynamicdata.kernel.Optional
 import dynamicdata.list.internal.*
 import dynamicdata.list.internal.AnonymousObservableList
@@ -13,6 +15,7 @@ import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.beans.PropertyChangeListener
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.KProperty1
 
 fun <T> Observable<IChangeSet<T>>.asObservableList(): IObservableList<T> =
     AnonymousObservableList(this)
@@ -20,36 +23,29 @@ fun <T> Observable<IChangeSet<T>>.asObservableList(): IObservableList<T> =
 fun <T> Observable<IChangeSet<T>>.notEmpty(): Observable<IChangeSet<T>> =
     this.filter { it.size != 0 }
 
-fun <T, R> PropertyChangeListener.whenPropertyChanged(
-    propertyAccessor: (T) -> R,
-    notifyOnInitialValue: Boolean = true,
-    fallbackValue: (() -> R)? = null
-) {
-    TODO()
-}
+fun <T : INotifyPropertyChanged, R> Observable<IChangeSet<T>>.autoRefresh(
+    accessor: KProperty1<T, R>,
+    bufferTimeSpan: Long? = null,
+    bufferTimeUnit: TimeUnit? = null,
+    propertyChangeThrottleTimeSpan: Long? = null,
+    propertyChangeThrottleTimeUnit: TimeUnit? = null,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    autoRefreshOnObservable({ t ->
+        if (propertyChangeThrottleTimeSpan == null)
+            t.whenPropertyChanged(accessor, false)
+        else
+            t.whenPropertyChanged(accessor, false)
+                .throttleWithTimeout(propertyChangeThrottleTimeSpan, propertyChangeThrottleTimeUnit, scheduler)
+    }, bufferTimeSpan, bufferTimeUnit, scheduler)
 
-fun <T : PropertyChangeListener, R> Observable<IChangeSet<T>>.autoRefresh(
-    propertyAccessor: (T) -> R,
+fun <T, R> Observable<IChangeSet<T>>.autoRefreshOnObservable(
+    evaluator: (T) -> Observable<R>,
     bufferTimeSpan: Long? = null,
     unit: TimeUnit? = null,
-    propertyChangeThrottle: Long? = null,
     scheduler: Scheduler? = null
 ): Observable<IChangeSet<T>> =
-    TODO()
-//    autoRefreshOnObservable({t->
-//        if(propertyChangeThrottle == null)
-//            t.whenPropertyChanged()
-//        else
-//            t.whenPropertyChanged()
-//    }, bufferTimeSpan, unit, scheduler)
-
-//fun <T, R> Observable<IChangeSet<T>>.autoRefreshOnObservable(
-//    evaluator: (T) -> Observable<R>,
-//    bufferTimeSpan: Long? = null,
-//    unit: TimeUnit? = null,
-//    scheduler: Scheduler? = null
-//): Observable<IChangeSet<T>> =
-//    AutoRefresh(this, evaluator, bufferTimeSpan, unit, scheduler).run()
+    AutoRefresh(this, evaluator, bufferTimeSpan, unit, scheduler).run()
 
 fun <T, R> Observable<IChangeSet<T>>.transform(
     transformFactory: (T) -> R
@@ -140,10 +136,8 @@ fun <T> Observable<IChangeSet<T>>.subscribeMany(subscriptionFactory: (T) -> Disp
 fun <T, R> Observable<IChangeSet<T>>.mergeMany(selector: (T) -> Observable<R>): Observable<R> =
     MergeMany(this, selector).run()
 
-fun <T> Observable<IChangeSet<T>>.clone(target: IExtendedList<T>): Observable<IChangeSet<T>> {
-    TODO()
-    //return this.doOnEach{ target.clone(it)}
-}
+fun <T> Observable<IChangeSet<T>>.clone(target: MutableList<T>): Observable<IChangeSet<T>> =
+    doOnEach{ target.clone(it.value)}
 
 fun <T, R> Observable<IChangeSet<T>>.cast(selector: (T) -> R): Observable<IChangeSet<R>> =
     map { it.transform(selector) }
@@ -220,3 +214,6 @@ fun <T> Observable<IChangeSet<T>>.whereReasonsAre(vararg reasons: ListChangeReas
 
 fun <T> Observable<IChangeSet<T>>.forEachItemChange(action: (ItemChange<T>) -> Unit): Observable<IChangeSet<T>> =
     doOnEach { it.value.flatten().forEach(action) }
+
+fun <T> Observable<IChangeSet<T>>.removeIndex(): Observable<IChangeSet<T>> =
+    map { ChangeSet(it.yieldWithoutIndex().toList()) }

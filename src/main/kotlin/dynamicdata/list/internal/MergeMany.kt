@@ -10,8 +10,13 @@ internal class MergeMany<T, R>(
     private val _selector: (T) -> Observable<R>
 ) {
     fun run(): Observable<R> =
-        Observable.unsafeCreate { observer ->
-            _source.subscribeMany { t -> _selector(t).serialize().subscribe(observer::onNext) }
-                .subscribe(Functions.emptyConsumer(), observer::onError)
+        Observable.create { emitter ->
+            val d = _source
+                .subscribeMany { t ->
+                _selector(t).serialize().subscribe(emitter::onNext)
+            }
+                .subscribe(Functions.emptyConsumer(), emitter::onError)
+
+            emitter.setDisposable(d)
         }
 }

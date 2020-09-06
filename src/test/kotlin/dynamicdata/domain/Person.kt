@@ -1,21 +1,28 @@
 package dynamicdata.domain
 
-import java.beans.PropertyChangeEvent
-import java.beans.PropertyChangeListener
+import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.PropertyChangedEvent
+import io.reactivex.rxjava3.subjects.PublishSubject
+import io.reactivex.rxjava3.subjects.Subject
 
-internal data class Person(
+internal class Person(
     val name: String,
-    val age: Int,
+    age: Int,
     val gender: String = "F",
-    val parentName: String = ""):PropertyChangeListener {
+    val parentName: String = ""
+) : INotifyPropertyChanged {
+    var age = age
+        set(value) {
+            propertyChanged.onNext(PropertyChangedEvent(this, "age"))
+            field = value
+        }
+
     constructor(firstName: String, lastName: String, age: Int)
             : this("$firstName $lastName", age)
 
+    override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
+
     override fun toString(): String {
         return "$name. $age"
-    }
-
-    override fun propertyChange(evt: PropertyChangeEvent?) {
-        TODO("Not yet implemented")
     }
 }

@@ -14,7 +14,7 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
             _changes.add(Change(ListChangeReason.AddRange, _innerList.toList()))
     }
 
-    constructor(list: ChangeAwareList<T>, copyChanges: Boolean): this(list._innerList) {
+    constructor(list: ChangeAwareList<T>, copyChanges: Boolean) : this(list._innerList) {
         if (copyChanges)
             _changes = ChangeSet(list._changes)
     }
@@ -259,6 +259,19 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
         return true
     }
 
+    fun refresh(item: T, index: Int) {
+        require(index >= 0) { "index cannot be negative." }
+
+        synchronized(lock) {
+            require(index <= _innerList.size) { "index cannot be greater than the size of the collection." }
+
+            val prev = _innerList[index]
+            _innerList[index] = item
+
+            _changes.add(Change(ListChangeReason.Refresh, item, Optional.of(prev), index))
+        }
+    }
+
     override fun indexOf(item: T): Int =
         synchronized(lock) {
             _innerList.indexOf(item)
@@ -301,10 +314,10 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
 
     override fun addAll(index: Int, elements: Collection<T>): Boolean {
         val args = Change(ListChangeReason.AddRange, elements, index)
-        if(args.range.isEmpty())
+        if (args.range.isEmpty())
             return false
 
-        synchronized(lock){
+        synchronized(lock) {
             _changes.add(args)
             _innerList.addAll(index, args.range)
         }
@@ -356,11 +369,11 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
         setItem(index, element)
 
     protected open fun setItem(index: Int, element: T): T {
-        if(index<0) throw IllegalArgumentException("index cannot be negative.")
+        if (index < 0) throw IllegalArgumentException("index cannot be negative.")
 
         var previous: T
-        synchronized(lock){
-            if(index>_innerList.size) throw IllegalArgumentException("index cannot be greater than the size of the collection.")
+        synchronized(lock) {
+            if (index > _innerList.size) throw IllegalArgumentException("index cannot be greater than the size of the collection.")
 
             previous = _innerList[index]
             _changes.add(Change(ListChangeReason.Replace, element, Optional.of(previous), index, index))

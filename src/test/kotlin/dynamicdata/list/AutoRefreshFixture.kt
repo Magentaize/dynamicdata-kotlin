@@ -114,7 +114,7 @@ internal class AutoRefreshFixture {
         val list = SourceList<Person>()
         val result = list.connect()
             .autoRefresh(Person::age)
-            .transform { p, idx -> TransformedPerson(p, idx) }
+            .transform { p, idx->TransformedPerson(p,idx) }
             .asAggregator()
 
         list.addRange(items)
@@ -132,6 +132,54 @@ internal class AutoRefreshFixture {
         result.messages.last().refreshes shouldBeEqualTo 1
         result.messages.last().first().item.reason shouldBeEqualTo ListChangeReason.Refresh
         result.messages.last().first().item.current.index shouldBeEqualTo 60
+    }
+
+    @Test
+    fun autoRefreshSort() {
+        val items = (1..100).map { Person("Person$it", it) }
+            .sortedByDescending { it.age }
+            .toList()
+        val comparator = compareBy<Person> { it.age }
+
+        val list = SourceList<Person>()
+        val result = list.connect()
+            .autoRefresh(Person::age)
+            .sort(compareBy { it.age })
+            .asAggregator()
+
+        fun checkOrder() {
+            val sorted = items.sortedWith(comparator).toSet()
+            result.data.items.toSet() shouldBeEqualTo sorted
+        }
+
+        list.addRange(items)
+        result.data.size shouldBeEqualTo 100
+        result.messages.size shouldBeEqualTo 1
+        checkOrder()
+
+        items[0].age = 60
+        checkOrder()
+        result.messages.size shouldBeEqualTo 2
+        result.messages.last().refreshes shouldBeEqualTo 1
+        result.messages.last().moves shouldBeEqualTo 1
+
+        items[90].age = -1
+        checkOrder()
+        result.messages.size shouldBeEqualTo 3
+        result.messages.last().refreshes shouldBeEqualTo 1
+        result.messages.last().moves shouldBeEqualTo 1
+
+        items[50].age = 49
+        checkOrder()
+        result.messages.size shouldBeEqualTo 4
+        result.messages.last().refreshes shouldBeEqualTo 1
+        result.messages.last().moves shouldBeEqualTo 0
+
+        items[50].age = 51
+        checkOrder()
+        result.messages.size shouldBeEqualTo 5
+        result.messages.last().refreshes shouldBeEqualTo 1
+        result.messages.last().moves shouldBeEqualTo 1
     }
 
     data class TransformedPerson(

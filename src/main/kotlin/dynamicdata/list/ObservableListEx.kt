@@ -13,7 +13,6 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import java.beans.PropertyChangeListener
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KProperty1
 
@@ -235,3 +234,12 @@ fun <T> Observable<IChangeSet<T>>.filterItem(
     policy: ListFilterPolicy = ListFilterPolicy.CalculateDiff
 ): Observable<IChangeSet<T>> =
     Filter(this, predicate, policy).run()
+
+fun <T> Observable<IChangeSet<T>>.sort(
+    comparator: Comparator<T>,
+    sortOption: SortOption = SortOption.None,
+    resort: Observable<Unit> = Observable.never(),
+    comparatorChanged: Observable<Comparator<T>> = Observable.never(),
+    resetThreshold: Int = 50
+): Observable<IChangeSet<T>> =
+    Sort(this, comparator, sortOption, resort, comparatorChanged, resetThreshold).run()

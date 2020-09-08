@@ -151,6 +151,9 @@ fun <T> IObservableList<Observable<IChangeSet<T>>>.except(): Observable<IChangeS
 fun <T> IObservableList<Observable<IChangeSet<T>>>.or(): Observable<IChangeSet<T>> =
     combine(CombineOperator.Or)
 
+fun <T> IObservableList<Observable<IChangeSet<T>>>.xor(): Observable<IChangeSet<T>> =
+    combine(CombineOperator.Xor)
+
 private fun <T> IObservableList<Observable<IChangeSet<T>>>.combine(type: CombineOperator): Observable<IChangeSet<T>> =
     DynamicCombiner(this, type).run()
 

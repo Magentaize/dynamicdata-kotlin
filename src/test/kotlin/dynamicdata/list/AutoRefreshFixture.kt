@@ -1,8 +1,12 @@
 package dynamicdata.list
 
 import dynamicdata.domain.Person
+import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.PropertyChangedEvent
 import dynamicdata.list.test.asAggregator
 import io.reactivex.rxjava3.schedulers.TestScheduler
+import io.reactivex.rxjava3.subjects.PublishSubject
+import io.reactivex.rxjava3.subjects.Subject
 import org.amshove.kluent.`should not be equal to`
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
@@ -108,6 +112,11 @@ internal class AutoRefreshFixture {
         result.messages.size shouldBeEqualTo 8
         result.messages.last().first().reason shouldBeEqualTo ListChangeReason.Replace
     }
+
+    data class TransformedPerson(
+        val person: Person,
+        val index: Int
+    )
 
     @Test
     fun autoRefreshTransform() {
@@ -249,7 +258,7 @@ internal class AutoRefreshFixture {
             items.groupBy { it.age % 10 }.forEach {
                 val childGroup = result.data.items.single { g -> g.key == it.key }
                 val expected = it.value.sortedBy { p -> p.name }
-                val actual = childGroup.list.items.sortedBy { p -> p.name }
+                val actual = childGroup.items.sortedBy { p -> p.name }
                 actual.toList() shouldBeEqualTo expected.toList()
             }
         }
@@ -267,30 +276,95 @@ internal class AutoRefreshFixture {
         items[1].age = -1
         result.data.size shouldBeEqualTo 11
         result.data.items.last().key shouldBeEqualTo -1
-        result.data.items.last().list.size shouldBeEqualTo 1
-        result.data.items.first().list.size shouldBeEqualTo 9
+        result.data.items.last().size shouldBeEqualTo 1
+        result.data.items.first().size shouldBeEqualTo 9
         checkContent()
 
         //put the value back where it was and check the group was removed
         items[1].age = 1
         result.data.size shouldBeEqualTo 10
+        result.messages.size shouldBeEqualTo 4
         checkContent()
-
-        val groupOf3 = result.data.items.elementAt(2)
-
-        var changes: IChangeSet<Person>? = null
-        groupOf3.list.connect().subscribe { changes = it }
 
         //refresh an item which makes it belong to the same group - should then propagate a refresh
         items[2].age = 13
-        changes `should not be equal to` null
-        changes!!.size shouldBeEqualTo 1
-        changes!!.first().reason shouldBeEqualTo ListChangeReason.Replace
-        changes!!.first().item.current shouldBe items[2]
+        checkContent()
+        result.messages.size shouldBeEqualTo 5
     }
 
-    data class TransformedPerson(
-        val person: Person,
-        val index: Int
-    )
+    @Test
+    fun autoRefreshDistinct() {
+        val items = (1..100).map { Person("Person$it", it) }.toList()
+        val list = SourceList<Person>()
+        val result = list.connect()
+            .autoRefresh(Person::age)
+            .distinctValues { it.age / 10 }
+            .asAggregator()
+
+        list.addRange(items)
+        result.data.size shouldBeEqualTo 11
+        result.messages.size shouldBeEqualTo 1
+
+        //update an item which did not match the filter and does so after change
+        items[50].age = 500
+        result.data.size shouldBeEqualTo 12
+        result.messages.last().first().reason shouldBeEqualTo ListChangeReason.Add
+        result.messages.last().first().item.current shouldBeEqualTo 50
+    }
+
+    @Test
+    fun autoRefreshMap() {
+        val items = (1..10).map { SelectableItem(it) }.toList()
+        val list = SourceList<SelectableItem>()
+        val result = list.connect()
+            .autoRefresh()
+            .filterItem { it.isSelected }
+            .asObservableList()
+
+        list.addRange(items)
+        result.size shouldBeEqualTo 0
+
+        items[0].isSelected = true
+        result.size shouldBeEqualTo 1
+
+        items[1].isSelected = true
+        result.size shouldBeEqualTo 2
+
+        list.removeRange(0, 2)
+        result.size shouldBeEqualTo 0
+    }
+
+    class SelectableItem(val id: Int) : INotifyPropertyChanged {
+        override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
+
+        var isSelected: Boolean = false
+            set(value) {
+                field = value
+                propertyChanged.onNext(PropertyChangedEvent(this, "isSelected"))
+            }
+    }
+
+    @Test
+    fun refreshTransformAsList() {
+        val list = SourceList<Example>()
+        val result = list.connect()
+            .autoRefresh(Example::value)
+            .transform({ it -> it.value }, true)
+            .asObservableList()
+
+        val e = Example()
+        list.add(e)
+        e.value = 1
+        result.items.first() shouldBeEqualTo 1
+    }
+
+    class Example : INotifyPropertyChanged {
+        override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
+
+        var value: Int = 0
+            set(value) {
+                field = value
+                propertyChanged.onNext(PropertyChangedEvent(this, "value"))
+            }
+    }
 }

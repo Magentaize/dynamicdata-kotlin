@@ -22,6 +22,22 @@ fun <T> Observable<IChangeSet<T>>.asObservableList(): IObservableList<T> =
 fun <T> Observable<IChangeSet<T>>.notEmpty(): Observable<IChangeSet<T>> =
     this.filter { it.size != 0 }
 
+fun <T : INotifyPropertyChanged> Observable<IChangeSet<T>>.autoRefresh(
+    bufferTimeSpan: Long? = null,
+    bufferTimeUnit: TimeUnit? = null,
+    propertyChangeThrottleTimeSpan: Long? = null,
+    propertyChangeThrottleTimeUnit: TimeUnit? = null,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    autoRefreshOnObservable({
+        if (propertyChangeThrottleTimeSpan == null)
+            it.whenPropertyChanged()
+        else
+            it
+                .whenPropertyChanged()
+                .throttleWithTimeout(propertyChangeThrottleTimeSpan, propertyChangeThrottleTimeUnit, scheduler)
+    }, bufferTimeSpan, bufferTimeUnit, scheduler)
+
 fun <T : INotifyPropertyChanged, R> Observable<IChangeSet<T>>.autoRefresh(
     accessor: KProperty1<T, R>,
     bufferTimeSpan: Long? = null,
@@ -247,30 +263,30 @@ fun <T> Observable<IChangeSet<T>>.sort(
 fun <T> Observable<IChangeSet<T>>.toCollection(): Observable<List<T>> =
     queryWhenChanged { it }
 
-fun <T,R> Observable<IChangeSet<T>>.queryWhenChanged(selector: (List<T>) -> R): Observable<R> =
+fun <T, R> Observable<IChangeSet<T>>.queryWhenChanged(selector: (List<T>) -> R): Observable<R> =
     queryWhenChanged().map(selector)
 
 fun <T> Observable<IChangeSet<T>>.queryWhenChanged(): Observable<List<T>> =
     QueryWhenChanged(this).run()
 
-fun <T,K> Observable<IChangeSet<T>>.groupOnMutable(
+fun <T, K> Observable<IChangeSet<T>>.groupOnMutable(
     selector: (T) -> K
-): Observable<IChangeSet<Group<T,K>>> =
+): Observable<IChangeSet<MutableGroup<T, K>>> =
     groupOnMutable(selector, Observable.never())
 
-fun <T,K> Observable<IChangeSet<T>>.groupOnMutable(
+fun <T, K> Observable<IChangeSet<T>>.groupOnMutable(
     selector: (T) -> K,
-    regroup:Observable<Unit>
-): Observable<IChangeSet<Group<T,K>>> =
+    regroup: Observable<Unit>
+): Observable<IChangeSet<MutableGroup<T, K>>> =
     GroupOnMutable(this, selector, regroup).run()
 
-fun <T,K> Observable<IChangeSet<T>>.groupOn(
+fun <T, K> Observable<IChangeSet<T>>.groupOn(
     selector: (T) -> K
-): Observable<IChangeSet<Group<T,K>>> =
+): Observable<IChangeSet<Group<T, K>>> =
     groupOn(selector, Observable.never())
 
-fun <T,K> Observable<IChangeSet<T>>.groupOn(
+fun <T, K> Observable<IChangeSet<T>>.groupOn(
     selector: (T) -> K,
-    regroup:Observable<Unit>
-): Observable<IChangeSet<Group<T,K>>> =
+    regroup: Observable<Unit>
+): Observable<IChangeSet<Group<T, K>>> =
     GroupOn(this, selector, regroup).run()

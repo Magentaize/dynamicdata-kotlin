@@ -11,9 +11,9 @@ internal class GroupOnMutable<T, K>(
     private val _selector: (T) -> K,
     private val _regroup: Observable<Unit>
 ) {
-    fun run(): Observable<IChangeSet<Group<T, K>>> =
+    fun run(): Observable<IChangeSet<MutableGroup<T, K>>> =
         Observable.create { emitter ->
-            val groupings = ChangeAwareList<Group<T, K>>()
+            val groupings = ChangeAwareList<MutableGroup<T, K>>()
             val groupCache = mutableMapOf<K, AnonymousMutableGroup<T, K>>()
 
             //capture the grouping up front which has the benefit that the group key is only selected once
@@ -44,10 +44,10 @@ internal class GroupOnMutable<T, K>(
         }
 
     private fun process(
-        result: ChangeAwareList<Group<T, K>>,
+        result: ChangeAwareList<MutableGroup<T, K>>,
         groupCache: MutableMap<K, AnonymousMutableGroup<T, K>>,
         changes: IChangeSet<ItemWithGroupKey<T, K>>
-    ): IChangeSet<Group<T, K>> {
+    ): IChangeSet<MutableGroup<T, K>> {
         changes.unified().groupBy { it.current.group }.forEach { grouping ->
             //lookup group and if created, add to result set
             val currentGroup = grouping.key
@@ -118,7 +118,7 @@ internal class GroupOnMutable<T, K>(
         groupCache: MutableMap<K, AnonymousMutableGroup<T, K>>,
         prevGroup: K,
         prevItem: T,
-        result: ChangeAwareList<Group<T, K>>
+        result: ChangeAwareList<MutableGroup<T, K>>
     ) {
         groupCache.lookup(prevGroup)
             .ifHasValue { g ->
@@ -131,10 +131,10 @@ internal class GroupOnMutable<T, K>(
     }
 
     private fun regroup(
-        result: ChangeAwareList<Group<T, K>>,
+        result: ChangeAwareList<MutableGroup<T, K>>,
         groupCache: MutableMap<K, AnonymousMutableGroup<T, K>>,
         currentItems: List<ItemWithGroupKey<T, K>>
-    ): IChangeSet<Group<T, K>> {
+    ): IChangeSet<MutableGroup<T, K>> {
         currentItems.forEach { iwv ->
             val currentGroupKey = iwv.group
             val newGroupKey = _selector(iwv.item)

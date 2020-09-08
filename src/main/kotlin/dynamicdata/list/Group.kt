@@ -1,6 +1,7 @@
 package dynamicdata.list
 
-interface Group<T, out K> {
+interface Group<T, K> {
     val key: K
-    val list: IObservableList<T>
+    val items: Iterable<T>
+    val size: Int
 }

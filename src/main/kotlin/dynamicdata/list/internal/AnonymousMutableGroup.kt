@@ -1,11 +1,11 @@
 package dynamicdata.list.internal
 
-import dynamicdata.list.Group
+import dynamicdata.list.MutableGroup
 import dynamicdata.list.IExtendedList
 import dynamicdata.list.IObservableList
 import dynamicdata.list.SourceList
 
-internal class AnonymousMutableGroup<T, K>(override val key: K) : Group<T, K> {
+internal class AnonymousMutableGroup<T, K>(override val key: K) : MutableGroup<T, K> {
     private val _source = SourceList<T>()
 
     override val list: IObservableList<T> = _source

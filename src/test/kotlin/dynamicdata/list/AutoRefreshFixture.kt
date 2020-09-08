@@ -2,8 +2,9 @@ package dynamicdata.list
 
 import dynamicdata.domain.Person
 import dynamicdata.list.test.asAggregator
-import io.reactivex.rxjava3.kotlin.toObservable
 import io.reactivex.rxjava3.schedulers.TestScheduler
+import org.amshove.kluent.`should not be equal to`
+import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
@@ -114,7 +115,7 @@ internal class AutoRefreshFixture {
         val list = SourceList<Person>()
         val result = list.connect()
             .autoRefresh(Person::age)
-            .transform { p, idx->TransformedPerson(p,idx) }
+            .transform { p, idx -> TransformedPerson(p, idx) }
             .asAggregator()
 
         list.addRange(items)
@@ -180,6 +181,112 @@ internal class AutoRefreshFixture {
         result.messages.size shouldBeEqualTo 5
         result.messages.last().refreshes shouldBeEqualTo 1
         result.messages.last().moves shouldBeEqualTo 1
+    }
+
+    @Test
+    fun autoRefreshGroupOnMutable() {
+        val items = (1..100).map { Person("Person$it", it) }.toList()
+        val list = SourceList<Person>()
+        val result = list.connect()
+            .autoRefresh(Person::age)
+            .groupOnMutable { it.age % 10 }
+            .asAggregator()
+
+        fun checkContent() {
+            items.groupBy { it.age % 10 }.forEach {
+                val childGroup = result.data.items.single { g -> g.key == it.key }
+                val expected = it.value.sortedBy { p -> p.name }
+                val actual = childGroup.list.items.sortedBy { p -> p.name }
+                actual.toList() shouldBeEqualTo expected.toList()
+            }
+        }
+
+        list.addRange(items)
+        result.data.size shouldBeEqualTo 10
+        result.messages.size shouldBeEqualTo 1
+        checkContent()
+
+        //move person from group 1 to 2
+        items[0].age = items[0].age + 1
+        checkContent()
+
+        //change the value and move to a grouping which does not yet exist
+        items[1].age = -1
+        result.data.size shouldBeEqualTo 11
+        result.data.items.last().key shouldBeEqualTo -1
+        result.data.items.last().list.size shouldBeEqualTo 1
+        result.data.items.first().list.size shouldBeEqualTo 9
+        checkContent()
+
+        //put the value back where it was and check the group was removed
+        items[1].age = 1
+        result.data.size shouldBeEqualTo 10
+        checkContent()
+
+        val groupOf3 = result.data.items.elementAt(2)
+
+        var changes: IChangeSet<Person>? = null
+        groupOf3.list.connect().subscribe { changes = it }
+
+        //refresh an item which makes it belong to the same group - should then propagate a refresh
+        items[2].age = 13
+        changes `should not be equal to` null
+        changes!!.size shouldBeEqualTo 1
+        changes!!.first().reason shouldBeEqualTo ListChangeReason.Replace
+        changes!!.first().item.current shouldBe items[2]
+    }
+
+    @Test
+    fun autoRefreshGroup() {
+        val items = (1..100).map { Person("Person$it", it) }.toList()
+        val list = SourceList<Person>()
+        val result = list.connect()
+            .autoRefresh(Person::age)
+            .groupOn { it.age % 10 }
+            .asAggregator()
+
+        fun checkContent() {
+            items.groupBy { it.age % 10 }.forEach {
+                val childGroup = result.data.items.single { g -> g.key == it.key }
+                val expected = it.value.sortedBy { p -> p.name }
+                val actual = childGroup.list.items.sortedBy { p -> p.name }
+                actual.toList() shouldBeEqualTo expected.toList()
+            }
+        }
+
+        list.addRange(items)
+        result.data.size shouldBeEqualTo 10
+        result.messages.size shouldBeEqualTo 1
+        checkContent()
+
+        //move person from group 1 to 2
+        items[0].age = items[0].age + 1
+        checkContent()
+
+        //change the value and move to a grouping which does not yet exist
+        items[1].age = -1
+        result.data.size shouldBeEqualTo 11
+        result.data.items.last().key shouldBeEqualTo -1
+        result.data.items.last().list.size shouldBeEqualTo 1
+        result.data.items.first().list.size shouldBeEqualTo 9
+        checkContent()
+
+        //put the value back where it was and check the group was removed
+        items[1].age = 1
+        result.data.size shouldBeEqualTo 10
+        checkContent()
+
+        val groupOf3 = result.data.items.elementAt(2)
+
+        var changes: IChangeSet<Person>? = null
+        groupOf3.list.connect().subscribe { changes = it }
+
+        //refresh an item which makes it belong to the same group - should then propagate a refresh
+        items[2].age = 13
+        changes `should not be equal to` null
+        changes!!.size shouldBeEqualTo 1
+        changes!!.first().reason shouldBeEqualTo ListChangeReason.Replace
+        changes!!.first().item.current shouldBe items[2]
     }
 
     data class TransformedPerson(

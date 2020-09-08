@@ -14,7 +14,7 @@ import java.util.*
 internal fun <T> Observable<T>.subscribeBy(observer: Observer<T>): Disposable =
     subscribe(observer::onNext, observer::onError, observer::onComplete)
 
-internal fun <T> Observable<T>.subscribeBy(emitter: Emitter<T>): Disposable =
+internal fun <T> Observable<T>.subscribeBy(emitter: ObservableEmitter<T>): Disposable =
     subscribe(emitter::onNext, emitter::onError, emitter::onComplete)
 
 internal fun <T> ConnectableObservable<T>.subscribeBy(emitter: ObservableEmitter<T>): Disposable =

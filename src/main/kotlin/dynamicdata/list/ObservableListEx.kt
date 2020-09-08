@@ -243,3 +243,34 @@ fun <T> Observable<IChangeSet<T>>.sort(
     resetThreshold: Int = 50
 ): Observable<IChangeSet<T>> =
     Sort(this, comparator, sortOption, resort, comparatorChanged, resetThreshold).run()
+
+fun <T> Observable<IChangeSet<T>>.toCollection(): Observable<List<T>> =
+    queryWhenChanged { it }
+
+fun <T,R> Observable<IChangeSet<T>>.queryWhenChanged(selector: (List<T>) -> R): Observable<R> =
+    queryWhenChanged().map(selector)
+
+fun <T> Observable<IChangeSet<T>>.queryWhenChanged(): Observable<List<T>> =
+    QueryWhenChanged(this).run()
+
+fun <T,K> Observable<IChangeSet<T>>.groupOnMutable(
+    selector: (T) -> K
+): Observable<IChangeSet<Group<T,K>>> =
+    groupOnMutable(selector, Observable.never())
+
+fun <T,K> Observable<IChangeSet<T>>.groupOnMutable(
+    selector: (T) -> K,
+    regroup:Observable<Unit>
+): Observable<IChangeSet<Group<T,K>>> =
+    GroupOnMutable(this, selector, regroup).run()
+
+fun <T,K> Observable<IChangeSet<T>>.groupOn(
+    selector: (T) -> K
+): Observable<IChangeSet<Group<T,K>>> =
+    groupOn(selector, Observable.never())
+
+fun <T,K> Observable<IChangeSet<T>>.groupOn(
+    selector: (T) -> K,
+    regroup:Observable<Unit>
+): Observable<IChangeSet<Group<T,K>>> =
+    GroupOn(this, selector, regroup).run()

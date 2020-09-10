@@ -358,7 +358,9 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
         }
 
     override fun removeAll(elements: Collection<T>): Boolean {
-        TODO("Not yet implemented")
+        removeMany(elements)
+
+        return true
     }
 
     override fun retainAll(elements: Collection<T>): Boolean {

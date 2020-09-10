@@ -13,14 +13,25 @@ internal class Person(
 ) : INotifyPropertyChanged {
     var age = age
         set(value) {
-            field = value
             propertyChanged.onNext(PropertyChangedEvent(this, "age"))
+            field = value
         }
 
     constructor(firstName: String, lastName: String, age: Int)
             : this("$firstName $lastName", age)
 
     override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is Person)
+            return false
+        if(this === other)
+            return true
+        if (name == other.name && age == other.age && gender == other.gender)
+            return true
+
+        return false
+    }
 
     override fun toString(): String {
         return "$name. $age"

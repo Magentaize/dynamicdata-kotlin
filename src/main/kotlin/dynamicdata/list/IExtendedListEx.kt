@@ -100,7 +100,7 @@ fun <T> MutableList<T>.clearOrRemoveMany(change: Change<T>) {
 fun <T> MutableList<T>.removeMany(itemsToRemove: Iterable<T>) {
     val toRemoveList = itemsToRemove.toList()
 
-    // match all indicies and and remove in reverse as it is more efficient
+    // match all indices and and remove in reverse as it is more efficient
     val toRemove = this.indexOfMany(toRemoveList)
         .sortedByDescending { it.index }
         .toList()

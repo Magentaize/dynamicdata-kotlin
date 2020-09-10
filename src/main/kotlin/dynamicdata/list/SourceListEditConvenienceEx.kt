@@ -1,5 +1,12 @@
 package dynamicdata.list
 
+import dynamicdata.list.internal.EditDiff
+
+fun <T> ISourceList<T>.editDiff(
+    items: Iterable<T>,
+equalityComparer: (T,T)->Boolean = {o1,o2-> o1 == o2 }) =
+    EditDiff(this,equalityComparer).edit(items)
+
 fun <T> ISourceList<T>.add(item: T) =
     edit { it.add(item) }
 

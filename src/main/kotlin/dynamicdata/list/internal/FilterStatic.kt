@@ -34,7 +34,7 @@ internal class FilterStatic<T>(
                     if (match)
                         filtered.replaceOrAdd(change.previous.value, change.current)
                     else
-                        filtered.remove(change.previous)
+                        filtered.remove(change.previous.value)
                 }
                 ListChangeReason.Remove -> filtered.remove(item.item.current)
                 ListChangeReason.RemoveRange -> filtered.removeMany(item.range)

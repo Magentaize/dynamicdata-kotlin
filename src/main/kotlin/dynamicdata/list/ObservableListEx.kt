@@ -15,6 +15,8 @@ import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KProperty1
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 fun <T> Observable<IChangeSet<T>>.asObservableList(): IObservableList<T> =
     AnonymousObservableList(this)
@@ -127,6 +129,12 @@ fun <T> Observable<IChangeSet<T>>.and(vararg others: Observable<IChangeSet<T>>) 
 
 fun <T> Collection<Observable<IChangeSet<T>>>.and(): Observable<IChangeSet<T>> =
     combine(CombineOperator.And)
+
+fun <T> Observable<IChangeSet<T>>.except(vararg others: Observable<IChangeSet<T>>) =
+    combine(CombineOperator.Except, *others)
+
+fun <T> Collection<Observable<IChangeSet<T>>>.except(): Observable<IChangeSet<T>> =
+    combine(CombineOperator.Except)
 
 private fun <T> Collection<Observable<IChangeSet<T>>>.combine(type: CombineOperator): Observable<IChangeSet<T>> =
     Combiner(this, type).run()
@@ -293,3 +301,20 @@ fun <T, K> Observable<IChangeSet<T>>.groupOn(
     regroup: Observable<Unit>
 ): Observable<IChangeSet<Group<T, K>>> =
     GroupOn(this, selector, regroup).run()
+
+@ExperimentalTime
+fun <T> ISourceList<T>.expireAfter(
+    timeSelector: (T) -> Duration?,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<Iterable<T>> =
+    expireAfter(timeSelector, null, scheduler)
+
+@ExperimentalTime
+fun <T> ISourceList<T>.expireAfter(
+    timeSelector: (T) -> Duration?,
+    pollingInterval: Duration? = null,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<Iterable<T>> {
+    val limiter = ExpireAfter(this, timeSelector, pollingInterval, scheduler)
+    return limiter.run().doOnEach { removeAll(it.value) }
+}

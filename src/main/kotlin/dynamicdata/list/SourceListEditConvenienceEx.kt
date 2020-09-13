@@ -4,8 +4,9 @@ import dynamicdata.list.internal.EditDiff
 
 fun <T> ISourceList<T>.editDiff(
     items: Iterable<T>,
-equalityComparer: (T,T)->Boolean = {o1,o2-> o1 == o2 }) =
-    EditDiff(this,equalityComparer).edit(items)
+    equalityComparer: (T, T) -> Boolean = { o1, o2 -> o1 == o2 }
+) =
+    EditDiff(this, equalityComparer).edit(items)
 
 fun <T> ISourceList<T>.add(item: T) =
     edit { it.add(item) }
@@ -24,6 +25,9 @@ fun <T> ISourceList<T>.removeAt(index: Int) =
 
 fun <T> ISourceList<T>.removeRange(index: Int, count: Int) =
     edit { it.removeAll(index, count) }
+
+fun <T> ISourceList<T>.removeAll(items: Iterable<T>) =
+    edit { it.removeMany(items) }
 
 fun <T> ISourceList<T>.clear() =
     edit { it.clear() }

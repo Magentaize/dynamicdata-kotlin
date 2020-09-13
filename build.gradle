@@ -15,11 +15,13 @@ version '0.0.1-SNAPSHOT'
 repositories {
     mavenCentral()
     jcenter()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile 'net.servicestack:client:1.0.43'
+    implementation 'net.servicestack:client:1.0.43'
+    implementation 'com.github.yongjhih.kxdate:kxdate:1.0.0'
 }
 
 dependencies {

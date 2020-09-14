@@ -262,6 +262,17 @@ fun <T> Observable<IChangeSet<T>>.filterItem(
 ): Observable<IChangeSet<T>> =
     Filter(this, predicate, policy).run()
 
+fun <T> Observable<IChangeSet<T>>.filterItem(
+    predicate: Observable<(T) -> Boolean>
+): Observable<IChangeSet<T>> =
+    Filter(this, predicate, ListFilterPolicy.CalculateDiff).run()
+
+fun <T> Observable<IChangeSet<T>>.filterItem(
+    predicate: Observable<(T) -> Boolean>,
+    policy: ListFilterPolicy = ListFilterPolicy.CalculateDiff
+): Observable<IChangeSet<T>> =
+    Filter(this, predicate, policy).run()
+
 fun <T> Observable<IChangeSet<T>>.sort(
     comparator: Comparator<T>,
     sortOption: SortOption = SortOption.None,

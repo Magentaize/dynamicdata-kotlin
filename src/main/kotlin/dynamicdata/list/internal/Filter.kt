@@ -35,7 +35,7 @@ internal class Filter<T>(
             var predicate = { _: T -> false }
             val all = mutableListOf<ItemWithMatch<T>>()
             val filtered = ChangeAwareList<ItemWithMatch<T>>()
-            val immutableFilter = _predicate != null
+            val immutableFilter = this::_predicate.isInitialized
             val predicateChanged: Observable<IChangeSet<ItemWithMatch<T>>>
 
             if (immutableFilter) {
@@ -198,5 +198,12 @@ internal class Filter<T>(
         val item: T,
         val isMatch: Boolean,
         val wasMatch: Boolean
-    )
+    ) {
+        override fun equals(other: Any?): Boolean {
+            return if (other is ItemWithMatch<*>)
+                item == other.item
+            else
+                false
+        }
+    }
 }

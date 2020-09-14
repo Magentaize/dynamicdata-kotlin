@@ -100,6 +100,13 @@ internal class Distinct<T, R>(
         val value: R,
         val previous: R
     ){
+        override fun equals(other: Any?): Boolean {
+            return if(other is ItemWithMatch<*, *>)
+                item == other.item
+            else
+                false
+        }
+
         override fun toString(): String {
             return "item: $item, value: $value, previous: $previous"
         }

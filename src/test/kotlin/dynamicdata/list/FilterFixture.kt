@@ -8,7 +8,7 @@ import kotlin.test.Test
 
 internal class FilterFixture : FilterBaseFixture() {
     override val filter: Subject<(Person) -> Boolean>
-        get() = TODO("Not yet implemented")
+        get() = throw Exception("Not implemented")
     override val result = source.connect { it.age > 20 }.asAggregator()
 
     @Test

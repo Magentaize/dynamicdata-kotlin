@@ -9,8 +9,8 @@ import kotlin.test.Test
 
 internal abstract class FilterBaseFixture {
     protected val source = SourceList<Person>()
-    protected abstract val result: ChangeSetAggregator<Person>
     protected abstract val filter: Subject<(Person) -> Boolean>
+    protected abstract val result: ChangeSetAggregator<Person>
 
     @Test
     fun addMatched() {

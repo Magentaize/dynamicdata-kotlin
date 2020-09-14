@@ -21,3 +21,11 @@ fun <TObject, TResult> Iterable<TObject>.indexOfMany(
     }
         .map { selector(it.A.index, it.A.value) }
 
+fun <T, R> Iterable<T>.aggregate(
+    seed: R,
+    func: (R, T) -> R
+): R {
+    var accumulate = seed
+    forEach { accumulate = func(accumulate, it) }
+    return accumulate
+}

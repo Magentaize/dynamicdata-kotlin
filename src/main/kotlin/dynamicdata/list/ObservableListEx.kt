@@ -1,5 +1,7 @@
 package dynamicdata.list
 
+import dynamicdata.aggregation.AggregateChangeSet
+import dynamicdata.aggregation.AggregateEnumerator
 import dynamicdata.binding.whenPropertyChanged
 import dynamicdata.cache.internal.CombineOperator
 import dynamicdata.kernel.INotifyPropertyChanged

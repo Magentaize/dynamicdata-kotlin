@@ -249,9 +249,6 @@ fun <T> Observable<IChangeSet<T>>.whereReasonsAre(vararg reasons: ListChangeReas
     }.notEmpty()
 }
 
-fun <T> Observable<IChangeSet<T>>.forEachItemChange(action: (ItemChange<T>) -> Unit): Observable<IChangeSet<T>> =
-    doOnEach { it.value.flatten().forEach(action) }
-
 fun <T> Observable<IChangeSet<T>>.removeIndex(): Observable<IChangeSet<T>> =
     map { ChangeSet(it.yieldWithoutIndex().toList()) }
 
@@ -331,3 +328,33 @@ fun <T> ISourceList<T>.expireAfter(
     val limiter = ExpireAfter(this, timeSelector, pollingInterval, scheduler)
     return limiter.run().doOnEach { removeAll(it.value) }
 }
+
+fun <T> Observable<IChangeSet<T>>.forEachChange(
+    action: (Change<T>) -> Unit
+): Observable<IChangeSet<T>> =
+    doOnEach { it.value.forEach(action) }
+
+fun <T> Observable<IChangeSet<T>>.forEachItemChange(
+    action: (ItemChange<T>) -> Unit
+): Observable<IChangeSet<T>> =
+    doOnEach { it.value.flatten().forEach(action) }
+
+@ExperimentalTime
+fun <T> Observable<Iterable<T>>.toObservableChangeSet(
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    toObservableChangeSet(null, -1, scheduler)
+
+@ExperimentalTime
+fun <T> Observable<Iterable<T>>.toObservableChangeSet(
+    expireAfter: ((T) -> Duration?)?,
+    limitSizeTo: Int,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<IChangeSet<T>> =
+    ToObservableChangeSet(this, expireAfter, limitSizeTo, scheduler).run()
+
+fun <T,K> Observable<IChangeSet<T>>.groupWithImmutableState(
+    selector: (T)->K,
+    regrouper: Observable<Unit> = Observable.never()
+): Observable<IChangeSet<Group<T,K>>> =
+    GroupOn(this, selector, regrouper).run()

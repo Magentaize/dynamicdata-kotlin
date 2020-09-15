@@ -6,5 +6,5 @@ import java.time.LocalDateTime
 internal data class ExpirableItem<T>(
     val item: T,
     val expireAt: Instant,
-    val index: Int
+    val index: Long
 )

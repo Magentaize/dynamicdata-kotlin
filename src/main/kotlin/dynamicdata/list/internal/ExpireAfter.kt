@@ -5,16 +5,9 @@ import dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.Disposable
-import ru.yole.kxdate.fromNow
-import ru.yole.kxdate.months
-import ru.yole.kxdate.nanoseconds
 import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-import java.util.*
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -28,7 +21,7 @@ internal class ExpireAfter<T>(
     fun run(): Observable<Iterable<T>> =
         Observable.create { emitter ->
             var dateTime = Instant.ofEpochMilli(_scheduler.now(TimeUnit.MILLISECONDS))
-            val orderItemWasAdded = AtomicInteger(-1)
+            val orderItemWasAdded = AtomicLong(-1)
             val autoRemover = _source.connect()
                 .doOnEach { dateTime = Instant.ofEpochMilli(_scheduler.now(TimeUnit.MILLISECONDS)) }
                 .cast {
@@ -61,7 +54,8 @@ internal class ExpireAfter<T>(
                         .distinctValues { it.expireAt }
                         .subscribeMany { time ->
                             val now = _scheduler.now(TimeUnit.MILLISECONDS)
-                            val expireAt = if (time != Instant.MAX) time.minusMillis(now).toEpochMilli() else Long.MAX_VALUE
+                            val expireAt =
+                                if (time != Instant.MAX) time.minusMillis(now).toEpochMilli() else Long.MAX_VALUE
                             Observable.timer(expireAt, TimeUnit.MILLISECONDS, _scheduler)
                                 .take(1)
                                 .subscribe { removal() }

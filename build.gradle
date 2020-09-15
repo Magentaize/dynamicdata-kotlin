@@ -21,7 +21,6 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation 'net.servicestack:client:1.0.43'
-    implementation 'com.github.yongjhih.kxdate:kxdate:1.0.0'
 }
 
 dependencies {

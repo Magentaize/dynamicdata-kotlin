@@ -14,6 +14,12 @@ fun <T> ISourceList<T>.add(item: T) =
 fun <T> ISourceList<T>.addRange(items: Iterable<T>) =
     edit { it.addAll(items) }
 
+fun <T> ISourceList<T>.addRange(
+    items: Iterable<T>,
+    index: Int
+) =
+    edit { it.addAll(index, items) }
+
 fun <T> ISourceList<T>.remove(item: T): Boolean {
     var removed = false
     edit { removed = it.remove(item) }

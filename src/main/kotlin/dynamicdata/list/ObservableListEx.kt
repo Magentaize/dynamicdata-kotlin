@@ -353,8 +353,8 @@ fun <T> Observable<Iterable<T>>.toObservableChangeSet(
 ): Observable<IChangeSet<T>> =
     ToObservableChangeSet(this, expireAfter, limitSizeTo, scheduler).run()
 
-fun <T,K> Observable<IChangeSet<T>>.groupWithImmutableState(
-    selector: (T)->K,
+fun <T, K> Observable<IChangeSet<T>>.groupWithImmutableState(
+    selector: (T) -> K,
     regrouper: Observable<Unit> = Observable.never()
-): Observable<IChangeSet<Group<T,K>>> =
+): Observable<IChangeSet<Group<T, K>>> =
     GroupOn(this, selector, regrouper).run()

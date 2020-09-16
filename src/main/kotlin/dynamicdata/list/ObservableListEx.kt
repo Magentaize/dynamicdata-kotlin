@@ -126,6 +126,12 @@ fun <T> Observable<IChangeSet<T>>.disposeMany(): Observable<IChangeSet<T>> =
 fun <T> Observable<IChangeSet<T>>.onItemRemoved(action: (T) -> Unit): Observable<IChangeSet<T>> =
     OnBeingRemoved(this, action).run()
 
+fun <T> Observable<IChangeSet<T>>.or(vararg others: Observable<IChangeSet<T>>) =
+    combine(CombineOperator.Or, *others)
+
+fun <T> Collection<Observable<IChangeSet<T>>>.or(): Observable<IChangeSet<T>> =
+    combine(CombineOperator.Or)
+
 fun <T> Observable<IChangeSet<T>>.and(vararg others: Observable<IChangeSet<T>>) =
     combine(CombineOperator.And, *others)
 

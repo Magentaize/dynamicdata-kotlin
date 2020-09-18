@@ -44,7 +44,7 @@ internal class RandomPersonGenerator {
             val maxAge = 100
 
             return girls.union(boys)
-                .sortedBy { UUID.randomUUID() }
+                .shuffled()
                 .map {
                     val lastname = if (it.second == it.third)
                         it.second

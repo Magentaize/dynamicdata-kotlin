@@ -1,7 +1,7 @@
 package dynamicdata.kernel
 
-import io.reactivex.rxjava3.subjects.Subject
+import io.reactivex.rxjava3.core.Observable
 
 interface INotifyPropertyChanged {
-    val propertyChanged: Subject<PropertyChangedEvent>
+    val propertyChanged: Observable<PropertyChangedEvent>
 }

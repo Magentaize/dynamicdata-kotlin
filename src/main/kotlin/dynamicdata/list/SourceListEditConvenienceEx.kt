@@ -11,6 +11,9 @@ fun <T> ISourceList<T>.editDiff(
 fun <T> ISourceList<T>.add(item: T) =
     edit { it.add(item) }
 
+fun <T> ISourceList<T>.add(index: Int, item: T) =
+    edit { it.add(index, item) }
+
 fun <T> ISourceList<T>.addRange(items: Iterable<T>) =
     edit { it.addAll(items) }
 
@@ -43,3 +46,6 @@ fun <T> ISourceList<T>.replace(original: T, destination: T) =
 
 fun <T> ISourceList<T>.replaceAt(index: Int, item: T) =
     edit { it[index] = item }
+
+fun <T> ISourceList<T>.move(original: Int, destination: Int) =
+    edit { it.move(original, destination) }

@@ -220,9 +220,8 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
         TODO("Not yet implemented")
     }
 
-    override fun isEmpty(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEmpty(): Boolean =
+        _innerList.isEmpty()
 
     override fun addAll(elements: Iterable<T>): Boolean {
         val args = Change(ListChangeReason.AddRange, elements)

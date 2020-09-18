@@ -3,6 +3,7 @@ package dynamicdata.list
 import dynamicdata.aggregation.AggregateChangeSet
 import dynamicdata.aggregation.AggregateEnumerator
 import dynamicdata.binding.whenPropertyChanged
+import dynamicdata.cache.PageRequest
 import dynamicdata.cache.internal.CombineOperator
 import dynamicdata.kernel.INotifyPropertyChanged
 import dynamicdata.kernel.Optional
@@ -364,3 +365,6 @@ fun <T, K> Observable<IChangeSet<T>>.groupWithImmutableState(
     regrouper: Observable<Unit> = Observable.never()
 ): Observable<IChangeSet<Group<T, K>>> =
     GroupOn(this, selector, regrouper).run()
+
+fun <T> Observable<IChangeSet<T>>.page(requests: Observable<PageRequest>): Observable<IChangeSet<T>> =
+    Page(this, requests).run() as Observable<IChangeSet<T>>

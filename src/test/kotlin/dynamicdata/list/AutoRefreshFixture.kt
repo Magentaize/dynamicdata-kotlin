@@ -124,7 +124,7 @@ internal class AutoRefreshFixture {
         val list = SourceList<Person>()
         val result = list.connect()
             .autoRefresh(Person::age)
-            .transform { p, idx -> TransformedPerson(p, idx) }
+            .transformWithIndex { p, idx -> TransformedPerson(p, idx) }
             .asAggregator()
 
         list.addRange(items)

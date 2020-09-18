@@ -84,16 +84,14 @@ fun <T, R> Observable<IChangeSet<T>>.transform(
         transformOnRefresh
     )
 
-@JvmName("transformWithIndex")
-fun <T, R> Observable<IChangeSet<T>>.transform(
+fun <T, R> Observable<IChangeSet<T>>.transformWithIndex(
     transformFactory: (T, Int) -> R
 ): Observable<IChangeSet<R>> =
     this.transform(
         { t, _, idx -> transformFactory(t, idx) }
     )
 
-@JvmName("transformWithIndex")
-fun <T, R> Observable<IChangeSet<T>>.transform(
+fun <T, R> Observable<IChangeSet<T>>.transformWithIndex(
     transformFactory: (T, Int) -> R,
     transformOnRefresh: Boolean = false
 ): Observable<IChangeSet<R>> =

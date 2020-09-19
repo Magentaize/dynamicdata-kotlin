@@ -59,7 +59,7 @@ internal class Filter<T>(
             //Need to get item by index and store it in the transform
             val filteredResult = _source
                 .serialize()
-                .transform({ t, prev: Optional<ItemWithMatch<T>> ->
+                .transformWithOptional({ t, prev: Optional<ItemWithMatch<T>> ->
                     val wasMatch = prev.convertOr({ p -> p.isMatch }, { false })
                     ItemWithMatch(t, predicate(t), wasMatch)
                 }, true)

@@ -1,7 +1,5 @@
 package dynamicdata.list
 
-import dynamicdata.aggregation.AggregateChangeSet
-import dynamicdata.aggregation.AggregateEnumerator
 import dynamicdata.binding.whenPropertyChanged
 import dynamicdata.cache.PageRequest
 import dynamicdata.cache.internal.CombineOperator
@@ -71,7 +69,7 @@ fun <T, R> Observable<IChangeSet<T>>.autoRefreshOnObservable(
 fun <T, R> Observable<IChangeSet<T>>.transform(
     transformFactory: (T) -> R
 ): Observable<IChangeSet<R>> =
-    this.transform(
+    this.transformWithOptional(
         { t, _, _ -> transformFactory(t) }
     )
 
@@ -79,7 +77,7 @@ fun <T, R> Observable<IChangeSet<T>>.transform(
     transformFactory: (T) -> R,
     transformOnRefresh: Boolean = false
 ): Observable<IChangeSet<R>> =
-    this.transform(
+    this.transformWithOptional(
         { t, _, _ -> transformFactory(t) },
         transformOnRefresh
     )
@@ -87,7 +85,7 @@ fun <T, R> Observable<IChangeSet<T>>.transform(
 fun <T, R> Observable<IChangeSet<T>>.transformWithIndex(
     transformFactory: (T, Int) -> R
 ): Observable<IChangeSet<R>> =
-    this.transform(
+    this.transformWithOptional(
         { t, _, idx -> transformFactory(t, idx) }
     )
 
@@ -95,22 +93,21 @@ fun <T, R> Observable<IChangeSet<T>>.transformWithIndex(
     transformFactory: (T, Int) -> R,
     transformOnRefresh: Boolean = false
 ): Observable<IChangeSet<R>> =
-    this.transform(
+    this.transformWithOptional(
         { t, _, idx -> transformFactory(t, idx) },
         transformOnRefresh
     )
 
-@JvmName("transformWithOptional")
-fun <T, R> Observable<IChangeSet<T>>.transform(
+fun <T, R> Observable<IChangeSet<T>>.transformWithOptional(
     transformFactory: (T, Optional<R>) -> R,
     transformOnRefresh: Boolean = false
 ): Observable<IChangeSet<R>> =
-    this.transform(
+    this.transformWithOptional(
         { t, prev, _ -> transformFactory(t, prev) },
         transformOnRefresh
     )
 
-fun <T, R> Observable<IChangeSet<T>>.transform(
+fun <T, R> Observable<IChangeSet<T>>.transformWithOptional(
     transformFactory: (T, Optional<R>, Int) -> R,
     transformOnRefresh: Boolean = false
 ): Observable<IChangeSet<R>> =
@@ -366,3 +363,8 @@ fun <T, K> Observable<IChangeSet<T>>.groupWithImmutableState(
 
 fun <T> Observable<IChangeSet<T>>.page(requests: Observable<PageRequest>): Observable<IChangeSet<T>> =
     Page(this, requests).run() as Observable<IChangeSet<T>>
+
+fun <T, R> Observable<IChangeSet<T>>.transformMany(
+    selector: (T) -> Iterable<R>
+): Observable<IChangeSet<R>> =
+    TransformMany(this, selector, null).run()

@@ -18,7 +18,7 @@ internal class GroupOnMutable<T, K>(
 
             //capture the grouping up front which has the benefit that the group key is only selected once
             val itemWithGroup = _source
-                .transform({ t, prev: Optional<ItemWithGroupKey<T, K>> ->
+                .transformWithOptional({ t, prev: Optional<ItemWithGroupKey<T, K>> ->
                     ItemWithGroupKey(t, _selector(t), prev.convert { it.group })
                 }, true)
 

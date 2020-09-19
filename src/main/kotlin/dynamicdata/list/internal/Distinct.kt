@@ -16,7 +16,7 @@ internal class Distinct<T, R>(
             val valueCounters = mutableMapOf<R, Int>()
             val result = ChangeAwareList<R>()
 
-            val d = _source.transform<T, ItemWithMatch<T, R>>({ t, prev, _ ->
+            val d = _source.transformWithOptional<T, ItemWithMatch<T, R>>({ t, prev, _ ->
                 val previousValue = prev.convertOr({ it.value }, { null as R })
                 ItemWithMatch(t, _selector(t), previousValue)
             }, true)

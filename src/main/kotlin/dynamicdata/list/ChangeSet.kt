@@ -30,7 +30,7 @@ class ChangeSet<T>(items: Collection<Change<T>> = emptyList()): ArrayList<Change
         get() = sumBy {
             return@sumBy when (it.reason) {
                 ListChangeReason.Remove -> 1
-                in setOf(ListChangeReason.RemoveRange, ListChangeReason.Clear) -> it.range.size
+                ListChangeReason.RemoveRange, ListChangeReason.Clear -> it.range.size
                 else -> 0
             }
         }

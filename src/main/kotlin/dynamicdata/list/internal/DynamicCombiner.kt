@@ -136,7 +136,7 @@ internal class DynamicCombiner<T>(
         //child caches have been updated before we reached this point.
         changes.flatten().forEach {
             when (it.reason) {
-                in setOf(ListChangeReason.Add, ListChangeReason.Remove) ->
+                ListChangeReason.Add, ListChangeReason.Remove ->
                     updateItemMembership(it.current, sourceLists, resultList)
 
                 ListChangeReason.Replace -> {
@@ -184,7 +184,7 @@ internal class DynamicCombiner<T>(
                     ListChangeReason.Remove ->
                         tracker.remove(it.item.current)
 
-                    in setOf(ListChangeReason.RemoveRange, ListChangeReason.Clear) ->
+                    ListChangeReason.RemoveRange, ListChangeReason.Clear ->
                         it.range.forEach { t -> tracker.remove(t) }
                 }
             }

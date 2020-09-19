@@ -3,7 +3,7 @@ package dynamicdata.list
 import dynamicdata.binding.whenPropertyChanged
 import dynamicdata.cache.PageRequest
 import dynamicdata.cache.internal.CombineOperator
-import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.NotifyPropertyChanged
 import dynamicdata.kernel.Optional
 import dynamicdata.list.internal.*
 import dynamicdata.list.internal.AnonymousObservableList
@@ -25,7 +25,7 @@ fun <T> Observable<IChangeSet<T>>.asObservableList(): ObservableList<T> =
 fun <T> Observable<IChangeSet<T>>.notEmpty(): Observable<IChangeSet<T>> =
     this.filter { it.size != 0 }
 
-fun <T : INotifyPropertyChanged> Observable<IChangeSet<T>>.autoRefresh(
+fun <T : NotifyPropertyChanged> Observable<IChangeSet<T>>.autoRefresh(
     bufferTimeSpan: Long? = null,
     bufferTimeUnit: TimeUnit? = null,
     propertyChangeThrottleTimeSpan: Long? = null,
@@ -41,7 +41,7 @@ fun <T : INotifyPropertyChanged> Observable<IChangeSet<T>>.autoRefresh(
                 .throttleWithTimeout(propertyChangeThrottleTimeSpan, propertyChangeThrottleTimeUnit, scheduler)
     }, bufferTimeSpan, bufferTimeUnit, scheduler)
 
-fun <T : INotifyPropertyChanged, R> Observable<IChangeSet<T>>.autoRefresh(
+fun <T : NotifyPropertyChanged, R> Observable<IChangeSet<T>>.autoRefresh(
     accessor: KProperty1<T, R>,
     bufferTimeSpan: Long? = null,
     bufferTimeUnit: TimeUnit? = null,

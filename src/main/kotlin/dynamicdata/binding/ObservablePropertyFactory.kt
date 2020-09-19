@@ -1,10 +1,10 @@
 package dynamicdata.binding
 
-import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.NotifyPropertyChanged
 import io.reactivex.rxjava3.core.Observable
 import kotlin.reflect.KProperty1
 
-internal class ObservablePropertyFactory<T : INotifyPropertyChanged, R>(accessor: KProperty1<T, R>) {
+internal class ObservablePropertyFactory<T : NotifyPropertyChanged, R>(accessor: KProperty1<T, R>) {
     private val _factory: (T, Boolean) -> Observable<PropertyValue<T, R>> = { t, notifyInitial ->
         fun factory(): PropertyValue<T, R> =
             PropertyValue(t, accessor(t))

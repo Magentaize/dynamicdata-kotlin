@@ -1,9 +1,7 @@
 package dynamicdata.binding
 
-import dynamicdata.kernel.INotifyPropertyChanged
-import java.beans.PropertyChangeListener
+import dynamicdata.kernel.NotifyPropertyChanged
 import java.lang.reflect.Field
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KProperty1
 
@@ -18,7 +16,7 @@ internal class ObservablePropertyFactoryCache private constructor() {
 
     private val _factories = ConcurrentHashMap<String, Any>()
 
-    fun <T: INotifyPropertyChanged,R> getFactory(accessor: KProperty1<T,R>):ObservablePropertyFactory<T,R>{
+    fun <T: NotifyPropertyChanged,R> getFactory(accessor: KProperty1<T,R>):ObservablePropertyFactory<T,R>{
         //var fields = mutableListOf<Field>()
         //getAllFields()
         //val owner = (la as PropertyReference1Impl).owner

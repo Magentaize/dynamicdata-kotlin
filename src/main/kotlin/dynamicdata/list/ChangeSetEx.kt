@@ -16,18 +16,18 @@ fun <T> IChangeSet<T>.flatten(): Iterable<ItemChange<T>> =
 
 fun ListChangeReason.getChangeType() =
     when (this) {
-        in setOf(
             ListChangeReason.Add,
             ListChangeReason.Refresh,
             ListChangeReason.Replace,
             ListChangeReason.Moved,
             ListChangeReason.Remove
-        ) -> ChangeType.Item
-        in setOf(
+         -> ChangeType.Item
+
             ListChangeReason.AddRange,
             ListChangeReason.RemoveRange,
             ListChangeReason.Clear
-        ) -> ChangeType.Range
+         -> ChangeType.Range
+
         else -> throw IllegalArgumentException()
     }
 

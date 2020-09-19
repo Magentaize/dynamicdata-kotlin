@@ -1,6 +1,6 @@
 package dynamicdata.domain
 
-import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.NotifyPropertyChanged
 import dynamicdata.kernel.PropertyChangedEvent
 import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.Subject
@@ -9,7 +9,7 @@ class PersonWithFriends(
     val name: String,
     age: Int,
     friends: Iterable<PersonWithFriends>
-) : INotifyPropertyChanged {
+) : NotifyPropertyChanged {
     constructor(name: String, age: Int) : this(name, age, listOf())
 
     var age: Int = age

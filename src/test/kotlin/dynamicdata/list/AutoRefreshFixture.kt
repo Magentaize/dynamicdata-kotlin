@@ -1,7 +1,7 @@
 package dynamicdata.list
 
 import dynamicdata.domain.Person
-import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.NotifyPropertyChanged
 import dynamicdata.kernel.PropertyChangedEvent
 import dynamicdata.list.test.asAggregator
 import io.reactivex.rxjava3.schedulers.TestScheduler
@@ -334,7 +334,7 @@ internal class AutoRefreshFixture {
         result.size shouldBeEqualTo 0
     }
 
-    class SelectableItem(val id: Int) : INotifyPropertyChanged {
+    class SelectableItem(val id: Int) : NotifyPropertyChanged {
         override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
 
         var isSelected: Boolean = false
@@ -358,7 +358,7 @@ internal class AutoRefreshFixture {
         result.items.first() shouldBeEqualTo 1
     }
 
-    class Example : INotifyPropertyChanged {
+    class Example : NotifyPropertyChanged {
         override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
 
         var value: Int = 0

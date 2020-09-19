@@ -1,6 +1,6 @@
 package dynamicdata.domain
 
-import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.NotifyPropertyChanged
 import dynamicdata.kernel.PropertyChangedEvent
 import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.Subject
@@ -9,7 +9,7 @@ class Animal(
     val name: String,
     val type: String,
     val family: AnimalFamily
-) : INotifyPropertyChanged {
+) : NotifyPropertyChanged {
     override val propertyChanged: Subject<PropertyChangedEvent> =
         PublishSubject.create()
 

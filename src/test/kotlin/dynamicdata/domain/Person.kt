@@ -1,6 +1,6 @@
 package dynamicdata.domain
 
-import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.NotifyPropertyChanged
 import dynamicdata.kernel.PropertyChangedEvent
 import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.Subject
@@ -10,7 +10,7 @@ internal class Person(
     age: Int,
     val gender: String = "F",
     val parentName: String = ""
-) : INotifyPropertyChanged {
+) : NotifyPropertyChanged {
     var age = age
         set(value) {
             field = value

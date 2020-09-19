@@ -23,7 +23,7 @@ internal class AggregateEnumerator<T>(
                     ListChangeReason.Remove ->
                         yield(AggregateItem(AggregateType.Remove, change.item.current))
 
-                    in setOf(ListChangeReason.RemoveRange, ListChangeReason.Clear) ->
+                    ListChangeReason.RemoveRange, ListChangeReason.Clear ->
                         yieldAll(change.range.map { AggregateItem(AggregateType.Remove, it) })
                 }
             }

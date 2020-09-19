@@ -30,7 +30,7 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey> {
     override fun clone(changes: ChangeSet<TObject, TKey>) =
         changes.forEach {
             when (it.reason) {
-                in setOf(ChangeReason.Add, ChangeReason.Update) -> data[it.key] = it.current
+                ChangeReason.Add, ChangeReason.Update -> data[it.key] = it.current
                 ChangeReason.Remove -> data.remove(it.key)
                 else -> {
                 }

@@ -1,12 +1,12 @@
 package dynamicdata.domain
 
-import dynamicdata.kernel.INotifyPropertyChanged
+import dynamicdata.kernel.NotifyPropertyChanged
 import dynamicdata.kernel.PropertyChangedEvent
 import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.Subject
 import java.util.*
 
-internal class Item(name: String) : INotifyPropertyChanged {
+internal class Item(name: String) : NotifyPropertyChanged {
     val id: UUID = UUID.randomUUID()
     var name: String = name
         set(value) {

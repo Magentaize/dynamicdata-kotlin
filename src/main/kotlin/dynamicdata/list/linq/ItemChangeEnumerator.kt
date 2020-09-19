@@ -28,7 +28,8 @@ internal class ItemChangeEnumerator<T>(private val _changeSet: IChangeSet<T>) : 
                         when (change.reason) {
                             ListChangeReason.AddRange ->
                                 yield(ItemChange(ListChangeReason.Add, it, index))
-                            in setOf(ListChangeReason.RemoveRange, ListChangeReason.Clear) ->
+
+                            ListChangeReason.RemoveRange, ListChangeReason.Clear ->
                                 yield(ItemChange(ListChangeReason.Remove, it, index))
                             else -> {
                             }

@@ -47,7 +47,7 @@ internal class Combiner<T>(
                     tracker.add(it.item.current)
                 }
                 ListChangeReason.Remove -> tracker.remove(it.item.current)
-                in setOf(ListChangeReason.RemoveRange, ListChangeReason.Clear) ->
+                ListChangeReason.RemoveRange, ListChangeReason.Clear ->
                     it.range.forEach { t -> tracker.remove(t) }
             }
         }
@@ -59,7 +59,7 @@ internal class Combiner<T>(
     ): IChangeSet<T> {
         changes.flatten().forEach { change ->
             when (change.reason) {
-                in setOf(ListChangeReason.Add, ListChangeReason.Remove) ->
+                ListChangeReason.Add, ListChangeReason.Remove ->
                     updateItemMembership(change.current, sourceLists, resultList)
 
                 ListChangeReason.Replace -> {

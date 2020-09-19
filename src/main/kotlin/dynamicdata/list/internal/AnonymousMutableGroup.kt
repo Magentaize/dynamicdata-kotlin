@@ -2,13 +2,13 @@ package dynamicdata.list.internal
 
 import dynamicdata.list.MutableGroup
 import dynamicdata.list.IExtendedList
-import dynamicdata.list.IObservableList
+import dynamicdata.list.ObservableList
 import dynamicdata.list.SourceList
 
 internal class AnonymousMutableGroup<T, K>(override val key: K) : MutableGroup<T, K> {
     private val _source = SourceList<T>()
 
-    override val list: IObservableList<T> = _source
+    override val list: ObservableList<T> = _source
 
     fun edit(action: (IExtendedList<T>) -> Unit) = _source.edit(action)
 

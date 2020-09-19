@@ -19,7 +19,7 @@ import kotlin.reflect.KProperty1
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
-fun <T> Observable<IChangeSet<T>>.asObservableList(): IObservableList<T> =
+fun <T> Observable<IChangeSet<T>>.asObservableList(): ObservableList<T> =
     AnonymousObservableList(this)
 
 fun <T> Observable<IChangeSet<T>>.notEmpty(): Observable<IChangeSet<T>> =
@@ -154,19 +154,19 @@ private fun <T> Observable<IChangeSet<T>>.combine(
     return Combiner(items, type).run()
 }
 
-fun <T> IObservableList<Observable<IChangeSet<T>>>.and(): Observable<IChangeSet<T>> =
+fun <T> ObservableList<Observable<IChangeSet<T>>>.and(): Observable<IChangeSet<T>> =
     combine(CombineOperator.And)
 
-fun <T> IObservableList<Observable<IChangeSet<T>>>.except(): Observable<IChangeSet<T>> =
+fun <T> ObservableList<Observable<IChangeSet<T>>>.except(): Observable<IChangeSet<T>> =
     combine(CombineOperator.Except)
 
-fun <T> IObservableList<Observable<IChangeSet<T>>>.or(): Observable<IChangeSet<T>> =
+fun <T> ObservableList<Observable<IChangeSet<T>>>.or(): Observable<IChangeSet<T>> =
     combine(CombineOperator.Or)
 
-fun <T> IObservableList<Observable<IChangeSet<T>>>.xor(): Observable<IChangeSet<T>> =
+fun <T> ObservableList<Observable<IChangeSet<T>>>.xor(): Observable<IChangeSet<T>> =
     combine(CombineOperator.Xor)
 
-private fun <T> IObservableList<Observable<IChangeSet<T>>>.combine(type: CombineOperator): Observable<IChangeSet<T>> =
+private fun <T> ObservableList<Observable<IChangeSet<T>>>.combine(type: CombineOperator): Observable<IChangeSet<T>> =
     DynamicCombiner(this, type).run()
 
 fun <T> Observable<IChangeSet<T>>.subscribeMany(subscriptionFactory: (T) -> Disposable): Observable<IChangeSet<T>> =
@@ -368,3 +368,14 @@ fun <T, R> Observable<IChangeSet<T>>.transformMany(
     selector: (T) -> Iterable<R>
 ): Observable<IChangeSet<R>> =
     TransformMany(this, selector, null).run()
+
+fun <T> Observable<out ObservableList<T>>.switch(): Observable<IChangeSet<T>> =
+    map { it.connect() }.switchObservable()
+
+fun <T> Observable<Observable<IChangeSet<T>>>.switchObservable(): Observable<IChangeSet<T>> =
+    Switch(this).run()
+
+fun <T> Observable<IChangeSet<T>>.populateInto(
+    destination: ISourceList<T>
+): Disposable =
+    subscribe { change -> destination.edit { it.clone(change) } }

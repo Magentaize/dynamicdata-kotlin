@@ -7,7 +7,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 internal class DynamicCombiner<T>(
-    private val _source: IObservableList<Observable<IChangeSet<T>>>,
+    private val _source: ObservableList<Observable<IChangeSet<T>>>,
     private val _type: CombineOperator
 ) {
     private val _lock = Any()

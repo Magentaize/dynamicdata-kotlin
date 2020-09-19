@@ -119,10 +119,10 @@ internal class PageFixture {
     }
 
     class SimplePaging(
-        val source: IObservableList<Animal>,
+        val source: ObservableList<Animal>,
         pager: Observable<PageRequest>
     ) {
-        val paged: IObservableList<Animal> =
+        val paged: ObservableList<Animal> =
             source.connect()
                 .page(pager)
                 .asObservableList()

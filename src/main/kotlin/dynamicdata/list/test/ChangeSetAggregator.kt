@@ -1,14 +1,14 @@
 package dynamicdata.list.test
 
 import dynamicdata.list.IChangeSet
-import dynamicdata.list.IObservableList
+import dynamicdata.list.ObservableList
 import dynamicdata.list.asObservableList
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 
 class ChangeSetAggregator<T>(source: Observable<IChangeSet<T>>) : Disposable {
-    val data: IObservableList<T>
+    val data: ObservableList<T>
     val messages: List<IChangeSet<T>>
         get() = _messages.toList()
 

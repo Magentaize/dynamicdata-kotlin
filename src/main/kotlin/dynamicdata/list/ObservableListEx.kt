@@ -381,3 +381,6 @@ fun <T> Observable<IChangeSet<T>>.populateInto(
     destination: ISourceList<T>
 ): Disposable =
     subscribe { change -> destination.edit { it.clone(change) } }
+
+fun <T> Observable<IChangeSet<T>>.refCount(): Observable<IChangeSet<T>> =
+    RefCount(this).run()

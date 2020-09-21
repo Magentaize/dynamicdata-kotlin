@@ -12,6 +12,7 @@ internal class QueryWhenChanged<T>(
             list.clone(changes)
             list
         }
+            .skip(1)
             .map { it.toList() }
 
 }

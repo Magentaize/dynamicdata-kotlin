@@ -11,8 +11,8 @@ internal class Page<T>(
     private val _source: Observable<IChangeSet<T>>,
     private val _requests: Observable<PageRequest>
 ) {
-    fun run(): Observable<PageChangeSet<T>> =
-        Observable.create { emitter ->
+    fun run(): Observable<IChangeSet<T>> =
+        Observable.create<PageChangeSet<T>> { emitter ->
             val all = mutableListOf<T>()
             val paged = ChangeAwareList<T>()
 
@@ -31,7 +31,7 @@ internal class Page<T>(
                 .subscribeBy(emitter)
 
             emitter.setDisposable(d)
-        }
+        } as Observable<IChangeSet<T>>
 
     private fun page(
         all: MutableList<T>,

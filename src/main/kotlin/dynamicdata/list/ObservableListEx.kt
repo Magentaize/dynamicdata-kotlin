@@ -361,8 +361,10 @@ fun <T, K> Observable<IChangeSet<T>>.groupWithImmutableState(
 ): Observable<IChangeSet<Group<T, K>>> =
     GroupOn(this, selector, regrouper).run()
 
-fun <T> Observable<IChangeSet<T>>.page(requests: Observable<PageRequest>): Observable<IChangeSet<T>> =
-    Page(this, requests).run() as Observable<IChangeSet<T>>
+fun <T> Observable<IChangeSet<T>>.page(
+    requests: Observable<PageRequest>
+): Observable<IChangeSet<T>> =
+    Page(this, requests).run()
 
 fun <T, R> Observable<IChangeSet<T>>.transformMany(
     selector: (T) -> Iterable<R>

@@ -10,6 +10,7 @@ import dynamicdata.list.internal.AnonymousObservableList
 import dynamicdata.list.internal.Combiner
 import dynamicdata.list.internal.MergeMany
 import dynamicdata.list.internal.Transformer
+import dynamicdata.list.linq.Reverser
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.Disposable
@@ -384,3 +385,12 @@ fun <T> Observable<IChangeSet<T>>.populateInto(
 
 fun <T> Observable<IChangeSet<T>>.refCount(): Observable<IChangeSet<T>> =
     RefCount(this).run()
+
+fun <T> Observable<IChangeSet<T>>.reverse(): Observable<IChangeSet<T>> =
+    Reverser<T>().let {
+        this.map { x ->
+            val list = it.reverse(x)
+            ChangeSet(list.asSequence().toList())
+        }
+    }
+

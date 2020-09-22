@@ -2,13 +2,13 @@ package dynamicdata.list
 
 import dynamicdata.kernel.Optional
 
-open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<T> {
+open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : ExtendedList<T> {
     private val lock = Any()
     private val _innerList: MutableList<T> = items.toMutableList()
-    private var _changes: ChangeSet<T>
+    private var _changes: AnonymousChangeSet<T>
 
     init {
-        _changes = ChangeSet(emptyList())
+        _changes = AnonymousChangeSet(emptyList())
 
         if (_innerList.any())
             _changes.add(Change(ListChangeReason.AddRange, _innerList.toList()))
@@ -16,23 +16,23 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
 
     constructor(list: ChangeAwareList<T>, copyChanges: Boolean) : this(list._innerList) {
         if (copyChanges)
-            _changes = ChangeSet(list._changes)
+            _changes = AnonymousChangeSet(list._changes)
     }
 
     override val size: Int
         get() = _innerList.size
 
-    fun captureChanges(): IChangeSet<T> {
-        var retValue: ChangeSet<T>
+    fun captureChanges(): ChangeSet<T> {
+        var retValue: AnonymousChangeSet<T>
         synchronized(lock) {
             if (_changes.count() == 0)
-                return ChangeSet.empty()
+                return AnonymousChangeSet.empty()
 
             retValue = _changes
             val totalChanges = retValue.totalChanges
             if (_innerList.count() == 0 && retValue.removes == totalChanges && totalChanges > 1) {
                 val removed = retValue.unified().map { it.current }
-                retValue = ChangeSet(listOf(Change(ListChangeReason.Clear, removed)))
+                retValue = AnonymousChangeSet(listOf(Change(ListChangeReason.Clear, removed)))
             }
 
             clearChanges()
@@ -46,7 +46,7 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
      */
     internal fun clearChanges() {
         synchronized(lock) {
-            _changes = ChangeSet(emptyList())
+            _changes = AnonymousChangeSet(emptyList())
         }
     }
 
@@ -62,7 +62,7 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : IExtendedList<
             val last = last
 
             if (last != null && last.reason == ListChangeReason.Add) {
-                val firstOfBatch = _changes.size - 1;
+                val firstOfBatch = _changes.size - 1
                 val previousItem = last.item
 
                 if (index == previousItem.currentIndex)

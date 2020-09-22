@@ -19,7 +19,7 @@ internal class ToObservableChangeSet<T>(
     private val _limitSizeTo: Int,
     private val _scheduler: Scheduler = Schedulers.computation()
 ) {
-    fun run(): Observable<IChangeSet<T>> =
+    fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
             if (_expireAfter == null && _limitSizeTo < 1) {
                 val d = _source.scan(ChangeAwareList<T>()) { state, latest ->
@@ -36,7 +36,7 @@ internal class ToObservableChangeSet<T>(
                 return@create
             }
 
-            var orderItemWasAdded = AtomicLong(-1)
+            val orderItemWasAdded = AtomicLong(-1)
             val sourceList = ChangeAwareList<ExpirableItem<T>>()
             val sizeLimited =
                 _source.scan(sourceList) { state, latest ->

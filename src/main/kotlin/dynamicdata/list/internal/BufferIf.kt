@@ -1,8 +1,8 @@
 package dynamicdata.list.internal
 
 import dynamicdata.kernel.subscribeBy
+import dynamicdata.list.AnonymousChangeSet
 import dynamicdata.list.ChangeSet
-import dynamicdata.list.IChangeSet
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.Disposable
@@ -12,18 +12,18 @@ import io.reactivex.rxjava3.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 
 internal class BufferIf<T>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private val _pauseIfTrueSelector: Observable<Boolean>,
     private val _initialPauseState: Boolean,
     private val _timespan: Long = 0L,
     private val _unit: TimeUnit = TimeUnit.NANOSECONDS,
     private val _scheduler: Scheduler = Schedulers.computation()
 ) {
-    fun run(): Observable<IChangeSet<T>> =
+    fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
             var paused = _initialPauseState
-            var buffer = ChangeSet<T>()
-            val timeoutSubscriber = SerialDisposable();
+            var buffer = AnonymousChangeSet<T>()
+            val timeoutSubscriber = SerialDisposable()
             val timeoutSubject = PublishSubject.create<Boolean>()
 
             val bufferSelector =
@@ -56,7 +56,7 @@ internal class BufferIf<T>(
                             return@subscribe
 
                         emitter.onNext(buffer)
-                        buffer = ChangeSet<T>()
+                        buffer = AnonymousChangeSet<T>()
 
                         //kill off timeout if required
                         timeoutSubscriber.set(Disposable.empty())

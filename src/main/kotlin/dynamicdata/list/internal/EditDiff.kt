@@ -1,9 +1,9 @@
 package dynamicdata.list.internal
 
-import dynamicdata.list.ISourceList
+import dynamicdata.list.EditableObservableList
 
 internal class EditDiff<T>(
-    private val _source: ISourceList<T>,
+    private val _source: EditableObservableList<T>,
     private val _equalityComparer: (T, T) -> Boolean
 ) {
     fun edit(items: Iterable<T>) =

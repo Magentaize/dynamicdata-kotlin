@@ -8,10 +8,10 @@ import dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 
 internal class Distinct<T, R>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private val _selector: (T) -> R
 ) {
-    fun run(): Observable<IChangeSet<R>> =
+    fun run(): Observable<ChangeSet<R>> =
         Observable.create { emitter ->
             val valueCounters = mutableMapOf<R, Int>()
             val result = ChangeAwareList<R>()
@@ -30,8 +30,8 @@ internal class Distinct<T, R>(
     private fun process(
         values: MutableMap<R, Int>,
         result: ChangeAwareList<R>,
-        changes: IChangeSet<ItemWithMatch<T, R>>
-    ): IChangeSet<R> {
+        changes: ChangeSet<ItemWithMatch<T, R>>
+    ): ChangeSet<R> {
         fun addAction(value: R) = values.lookup(value)
             .ifHasValue { count -> values[value] = count + 1 }
             .`else` {

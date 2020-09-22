@@ -1,6 +1,6 @@
 package dynamicdata.list.internal
 
-import dynamicdata.list.ISourceList
+import dynamicdata.list.EditableObservableList
 import dynamicdata.list.toCollection
 import dynamicdata.list.transform
 import io.reactivex.rxjava3.core.Observable
@@ -10,10 +10,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 internal class LimitSizeTo<T>(
-    private val _source: ISourceList<T>,
+    private val _source: EditableObservableList<T>,
     private val _limit: Int,
     private val _scheduler: Scheduler
 ) {
+    @Suppress("UNCHECKED_CAST")
     fun run(): Observable<Iterable<T>> {
         val emptyList = emptyList<T>()
         val orderItemWasAdded = AtomicLong(-1)

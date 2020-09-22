@@ -4,9 +4,10 @@ import dynamicdata.kernel.subscribeBy
 import dynamicdata.kernel.valueOrThrow
 import dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.internal.functions.Functions
 
 internal class Sort<T>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private var _comparator: Comparator<T>,
     private val _sortOption: SortOption,
     private val _resort: Observable<Unit>,
@@ -14,7 +15,7 @@ internal class Sort<T>(
     private val _resetThreshold: Int
 ) {
 
-    fun run(): Observable<IChangeSet<T>> =
+    fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
             val original = mutableListOf<T>()
             val target = ChangeAwareList<T>()
@@ -41,7 +42,7 @@ internal class Sort<T>(
             emitter.setDisposable(d)
         }
 
-    private fun changeComparer(target: ChangeAwareList<T>, comparator: Comparator<T>): IChangeSet<T> {
+    private fun changeComparer(target: ChangeAwareList<T>, comparator: Comparator<T>): ChangeSet<T> {
         _comparator = comparator
 
         if (_resetThreshold > 0 && target.size <= _resetThreshold)
@@ -54,7 +55,7 @@ internal class Sort<T>(
         return target.captureChanges()
     }
 
-    private fun reset(original: MutableList<T>, target: ChangeAwareList<T>): IChangeSet<T> {
+    private fun reset(original: MutableList<T>, target: ChangeAwareList<T>): ChangeSet<T> {
         val sorted = original.sortedWith(_comparator).toList()
         target.clear()
         target.addAll(sorted)
@@ -62,7 +63,7 @@ internal class Sort<T>(
         return target.captureChanges()
     }
 
-    private fun reorder(target: ChangeAwareList<T>): IChangeSet<T> {
+    private fun reorder(target: ChangeAwareList<T>): ChangeSet<T> {
         var index = -1
         val sorted = target.sortedWith(_comparator).toList()
         sorted.forEach {
@@ -80,7 +81,7 @@ internal class Sort<T>(
         return target.captureChanges()
     }
 
-    private fun process(target: ChangeAwareList<T>, changes: IChangeSet<T>): IChangeSet<T> {
+    private fun process(target: ChangeAwareList<T>, changes: ChangeSet<T>): ChangeSet<T> {
         //if all removes and not Clear, then more efficient to try clear range
         if (changes.totalChanges == changes.removes
             && changes.all { it.reason != ListChangeReason.Clear }
@@ -95,7 +96,7 @@ internal class Sort<T>(
         return processImpl(target, changes)
     }
 
-    private fun processImpl(target: ChangeAwareList<T>, changes: IChangeSet<T>): IChangeSet<T> {
+    private fun processImpl(target: ChangeAwareList<T>, changes: ChangeSet<T>): ChangeSet<T> {
         val refreshes = ArrayList<T>(changes.refreshes)
 
         changes.forEach { change ->
@@ -141,6 +142,8 @@ internal class Sort<T>(
 
                 ListChangeReason.Clear ->
                     target.clear()
+
+                else -> Functions.EMPTY_ACTION
             }
         }
 

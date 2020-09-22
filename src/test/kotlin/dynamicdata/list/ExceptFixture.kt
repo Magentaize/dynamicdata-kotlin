@@ -6,12 +6,12 @@ import org.amshove.kluent.shouldBeEqualTo
 import kotlin.test.Test
 
 internal class ExceptFixture : ExceptFixtureBase() {
-    override fun createObservable(): Observable<IChangeSet<Int>> =
+    override fun createObservable(): Observable<ChangeSet<Int>> =
         source1.connect().except(source2.connect())
 }
 
 internal class ExceptCollectionFixture : ExceptFixtureBase() {
-    override fun createObservable(): Observable<IChangeSet<Int>> =
+    override fun createObservable(): Observable<ChangeSet<Int>> =
         listOf(source1.connect(), source2.connect()).except()
 }
 
@@ -20,7 +20,7 @@ internal abstract class ExceptFixtureBase {
     protected val source2 = SourceList<Int>()
     private val result = createObservable().asAggregator()
 
-    abstract fun createObservable(): Observable<IChangeSet<Int>>
+    abstract fun createObservable(): Observable<ChangeSet<Int>>
 
     @Test
     fun includedWhenItemIsInOneSource() {

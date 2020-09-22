@@ -4,7 +4,7 @@ import dynamicdata.kernel.duplicates
 import dynamicdata.kernel.indexOfMany
 import java.lang.IllegalArgumentException
 
-fun <T> MutableList<T>.clone(changes: IChangeSet<T>) =
+fun <T> MutableList<T>.clone(changes: ChangeSet<T>) =
     clone(changes as Iterable<Change<T>>)
 
 fun <T> MutableList<T>.clone(changes: Iterable<Change<T>>) =
@@ -21,15 +21,20 @@ private fun <T> MutableList<T>.clone(item: Change<T>) {
             else
                 this.add(change.current)
         }
-        ListChangeReason.AddRange -> this.addOrInsertRange(item.range, item.range.index)
-        ListChangeReason.Clear -> this.clearOrRemoveMany(item)
+
+        ListChangeReason.AddRange ->
+            this.addOrInsertRange(item.range, item.range.index)
+
+        ListChangeReason.Clear ->
+            this.clearOrRemoveMany(item)
+
         ListChangeReason.Replace -> {
             val change = item.item
             if (change.currentIndex >= 0 && change.currentIndex == change.previousIndex) {
                 this[change.currentIndex] = change.current
             } else {
                 if (change.previousIndex == -1) {
-                    this.remove(change.previous)
+                    this.remove(change.previous.value)
                 } else {
                     //is this best? or replace + move?
                     this.removeAt(change.previousIndex)
@@ -42,6 +47,7 @@ private fun <T> MutableList<T>.clone(item: Change<T>) {
                 }
             }
         }
+
         ListChangeReason.Refresh ->
             if (changeAware != null) {
                 changeAware.refreshAt(item.item.currentIndex)
@@ -49,6 +55,7 @@ private fun <T> MutableList<T>.clone(item: Change<T>) {
                 this.removeAt(item.item.currentIndex)
                 this.add(item.item.currentIndex, item.item.current)
             }
+
         ListChangeReason.Remove -> {
             val change = item.item
             if (change.currentIndex >= 0) {
@@ -57,21 +64,23 @@ private fun <T> MutableList<T>.clone(item: Change<T>) {
                 this.remove(change.current)
             }
         }
+
         ListChangeReason.RemoveRange ->
             //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
             //if (item.Range.Index < 0)
             //    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
-            if (item.range.index >= 0 && (this is IExtendedList<*>)) {
+            if (item.range.index >= 0 && (this is ExtendedList<*>)) {
                 this.removeAll(item.range.index, item.range.size)
             } else {
                 this.removeAll(item.range)
             }
+
         ListChangeReason.Moved -> {
             val change = item.item
             if (change.currentIndex < 0)
                 throw UnspecifiedIndexException("Cannot move as an index was not specified")
 
-            if (this is IExtendedList<*>) {
+            if (this is ExtendedList<*>) {
                 this.move(change.previousIndex, change.currentIndex)
             } else {
                 //check this works whatever the index is

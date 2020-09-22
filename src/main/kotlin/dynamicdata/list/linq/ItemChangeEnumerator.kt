@@ -1,11 +1,11 @@
 package dynamicdata.list.linq
 
 import dynamicdata.list.ChangeType
-import dynamicdata.list.IChangeSet
+import dynamicdata.list.ChangeSet
 import dynamicdata.list.ItemChange
 import dynamicdata.list.ListChangeReason
 
-internal class ItemChangeEnumerator<T>(private val _changeSet: IChangeSet<T>) : Iterable<ItemChange<T>> {
+internal class ItemChangeEnumerator<T>(private val _changeSet: ChangeSet<T>) : Iterable<ItemChange<T>> {
     override operator fun iterator(): Iterator<ItemChange<T>> {
         var lastKnownIndex = 0
         return iterator {

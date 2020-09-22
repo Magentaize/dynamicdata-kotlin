@@ -8,10 +8,11 @@ import io.reactivex.rxjava3.core.Observable
 import java.lang.Integer.min
 
 internal class Page<T>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private val _requests: Observable<PageRequest>
 ) {
-    fun run(): Observable<IChangeSet<T>> =
+    @Suppress("UNCHECKED_CAST")
+    fun run(): Observable<ChangeSet<T>> =
         Observable.create<PageChangeSet<T>> { emitter ->
             val all = mutableListOf<T>()
             val paged = ChangeAwareList<T>()
@@ -31,18 +32,17 @@ internal class Page<T>(
                 .subscribeBy(emitter)
 
             emitter.setDisposable(d)
-        } as Observable<IChangeSet<T>>
+        } as Observable<ChangeSet<T>>
 
     private fun page(
         all: MutableList<T>,
         paged: ChangeAwareList<T>,
         request: PageRequest,
-        changeSet: IChangeSet<T>? = null
+        changeSet: ChangeSet<T>? = null
     ): PageChangeSet<T> {
         if (changeSet != null)
             all.clone(changeSet)
 
-        val prev = paged
         val pages = calculatePages(all, request)
         val page = min(request.page, pages)
         val skip = request.size * (page - 1)
@@ -51,8 +51,8 @@ internal class Page<T>(
             .take(request.size)
             .toList()
 
-        val adds = current.minus(prev)
-        val removes = prev.minus(current)
+        val adds = current.minus(paged)
+        val removes = paged.minus(current)
 
         paged.removeMany(removes)
 

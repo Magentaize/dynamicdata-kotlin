@@ -5,13 +5,14 @@ import dynamicdata.kernel.subscribeBy
 import dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.internal.functions.Functions
 
 internal class GroupOn<T, K>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private val _selector: (T) -> K,
     private val _regroup: Observable<Unit>
 ) {
-    fun run(): Observable<IChangeSet<Group<T, K>>> =
+    fun run(): Observable<ChangeSet<Group<T, K>>> =
         Observable.create { emitter ->
             val groupings = ChangeAwareList<Group<T, K>>()
             val groupCache = mutableMapOf<K, GroupContainer<T, K>>()
@@ -48,8 +49,8 @@ internal class GroupOn<T, K>(
     private fun process(
         result: ChangeAwareList<Group<T, K>>,
         allGroupings: MutableMap<K, GroupContainer<T, K>>,
-        changes: IChangeSet<ItemWithGroupKey<T, K>>
-    ): IChangeSet<Group<T, K>> {
+        changes: ChangeSet<ItemWithGroupKey<T, K>>
+    ): ChangeSet<Group<T, K>> {
         //need to keep track of effected groups to calculate correct notifications
         val initialStateOfGroups = mutableMapOf<K, Group<T, K>>()
 
@@ -122,6 +123,8 @@ internal class GroupOn<T, K>(
                         getInitialState()
                         listToModify.clear()
                     }
+
+                    else -> Functions.EMPTY_ACTION
                 }
             }
         }
@@ -133,7 +136,7 @@ internal class GroupOn<T, K>(
         result: ChangeAwareList<Group<T, K>>,
         allGroupings: MutableMap<K, GroupContainer<T, K>>,
         currentItems: List<ItemWithGroupKey<T, K>>
-    ): IChangeSet<Group<T, K>> {
+    ): ChangeSet<Group<T, K>> {
         val initialStateOfGroups = mutableMapOf<K, Group<T, K>>()
 
         currentItems.forEach { iwv ->
@@ -167,7 +170,7 @@ internal class GroupOn<T, K>(
         result: ChangeAwareList<Group<T, K>>,
         allGroupings: MutableMap<K, GroupContainer<T, K>>,
         initialStateOfGroups: MutableMap<K, Group<T, K>>
-    ): IChangeSet<Group<T, K>> {
+    ): ChangeSet<Group<T, K>> {
         initialStateOfGroups.forEach {
             val key = it.key
             val current = allGroupings[key]!!

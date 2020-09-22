@@ -9,7 +9,7 @@ internal class DynamicOrFixture {
     private val source1 = SourceList<Int>()
     private val source2 = SourceList<Int>()
     private val source3 = SourceList<Int>()
-    private val source = SourceList<Observable<IChangeSet<Int>>>()
+    private val source = SourceList<Observable<ChangeSet<Int>>>()
     private val result = source.or().asAggregator()
 
     @Test

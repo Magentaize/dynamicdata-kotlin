@@ -7,12 +7,12 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 internal class DynamicCombiner<T>(
-    private val _source: ObservableList<Observable<IChangeSet<T>>>,
+    private val _source: ObservableList<Observable<ChangeSet<T>>>,
     private val _type: CombineOperator
 ) {
     private val _lock = Any()
 
-    fun run(): Observable<IChangeSet<T>> =
+    fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
             //this is the resulting list which produces all notifications
             val resultList = ChangeAwareListWithRefCounts<T>()
@@ -21,7 +21,7 @@ internal class DynamicCombiner<T>(
             //This populates a RefTracker when the original source is subscribed to
             val sourceLists = _source.connect()
                 .serialize()
-                .transform { it:Observable<IChangeSet<T>> -> MergeContainer(it) }
+                .transform { it:Observable<ChangeSet<T>> -> MergeContainer(it) }
                 .asObservableList()
 
             //merge the items back together
@@ -93,7 +93,7 @@ internal class DynamicCombiner<T>(
         sourceLists: List<MergeContainer<T>>,
         resultList: ChangeAwareListWithRefCounts<T>,
         items: Iterable<T>
-    ): IChangeSet<T> {
+    ): ChangeSet<T> {
         items.forEach { updateItemMembership(it, sourceLists, resultList) }
         return resultList.captureChanges()
     }
@@ -103,12 +103,12 @@ internal class DynamicCombiner<T>(
         sourceLists: List<MergeContainer<T>>,
         resultList: ChangeAwareListWithRefCounts<T>
     ) {
-        val isInResult = resultList.contains(item);
-        val shouldBeInResult = matchesConstraint(sourceLists, item);
+        val isInResult = resultList.contains(item)
+        val shouldBeInResult = matchesConstraint(sourceLists, item)
         if (shouldBeInResult && !isInResult) {
-            resultList.add(item);
+            resultList.add(item)
         } else if (!shouldBeInResult && isInResult) {
-            resultList.remove(item);
+            resultList.remove(item)
         }
     }
 
@@ -131,8 +131,8 @@ internal class DynamicCombiner<T>(
     private fun updateResultList(
         sourceLists: List<MergeContainer<T>>,
         resultList: ChangeAwareListWithRefCounts<T>,
-        changes: IChangeSet<T>
-    ): IChangeSet<T> {
+        changes: ChangeSet<T>
+    ): ChangeSet<T> {
         //child caches have been updated before we reached this point.
         changes.flatten().forEach {
             when (it.reason) {
@@ -163,11 +163,11 @@ internal class DynamicCombiner<T>(
         return resultList.captureChanges()
     }
 
-    private class MergeContainer<T>(source: Observable<IChangeSet<T>>) {
+    private class MergeContainer<T>(source: Observable<ChangeSet<T>>) {
         val tracker = ReferenceCountTracker<T>()
-        val source: Observable<IChangeSet<T>> = source.doOnEach { clone(it.value) }
+        val source: Observable<ChangeSet<T>> = source.doOnEach { clone(it.value) }
 
-        private fun clone(changes: IChangeSet<T>) =
+        private fun clone(changes: ChangeSet<T>) =
             changes.forEach {
                 when (it.reason) {
                     ListChangeReason.Add ->

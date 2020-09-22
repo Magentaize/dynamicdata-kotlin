@@ -8,7 +8,7 @@ internal class DeferUntilLoadedFixture{
     @Test
     fun deferUntilLoadedDoesNothingUntilDataHasBeenReceived(){
         var updateReceived = false
-        var result: IChangeSet<Person>? = null
+        var result: ChangeSet<Person>? = null
         val cache = SourceList<Person>()
 
         val deferStream = cache.connect()

@@ -7,9 +7,9 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
 
-class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> {
-    private val changes = PublishSubject.create<IChangeSet<T>>()
-    private val changesPreview = PublishSubject.create<IChangeSet<T>>()
+class SourceList<T>(source: Observable<ChangeSet<T>>? = null) : EditableObservableList<T> {
+    private val changes = PublishSubject.create<ChangeSet<T>>()
+    private val changesPreview = PublishSubject.create<ChangeSet<T>>()
     private val _sizeChanged = lazy { PublishSubject.create<Int>() }
     private val readerWriter = ReaderWriter<T>()
     private var editLevel = 0
@@ -34,9 +34,9 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
         }
     }
 
-    override fun edit(action: (IExtendedList<T>) -> Unit) =
+    override fun edit(action: (ExtendedList<T>) -> Unit) =
         synchronized(lock) {
-            var change = ChangeSet.empty<T>()
+            var change = AnonymousChangeSet.empty<T>()
             editLevel++
 
             if (editLevel == 1) {
@@ -54,7 +54,7 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
                 invokeNext(change)
         }
 
-    private fun invokeNextPreview(change: IChangeSet<T>) {
+    private fun invokeNextPreview(change: ChangeSet<T>) {
         if (change.size == 0)
             return
 
@@ -63,7 +63,7 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
         }
     }
 
-    private fun invokeNext(change: IChangeSet<T>) {
+    private fun invokeNext(change: ChangeSet<T>) {
         if (change.size == 0)
             return
 
@@ -109,17 +109,16 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
         return disposed
     }
 
-    override fun connect(predicate: ((T) -> Boolean)?): Observable<IChangeSet<T>> {
-        var observable = Observable.create<IChangeSet<T>> { emitter ->
+    override fun connect(predicate: ((T) -> Boolean)?): Observable<ChangeSet<T>> {
+        var observable = Observable.create<ChangeSet<T>> { emitter ->
             synchronized(lock) {
                 if (readerWriter.items.isNotEmpty()) {
-                    emitter.onNext(ChangeSet(listOf(Change(ListChangeReason.AddRange, readerWriter.items))))
+                    emitter.onNext(AnonymousChangeSet(listOf(Change(ListChangeReason.AddRange, readerWriter.items))))
                 }
 
                 val d = changes
-                    .doFinally { print(1) }
                     .doFinally(emitter::onComplete)
-                    .subscribe({emitter.onNext(it)}, { print(it)})
+                    .subscribeBy(emitter)
 
                 emitter.setDisposable(d)
             }
@@ -132,8 +131,8 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
         return observable
     }
 
-    override fun preview(predicate: ((T) -> Boolean)?): Observable<IChangeSet<T>> {
-        var observable: Observable<IChangeSet<T>> = changesPreview
+    override fun preview(predicate: ((T) -> Boolean)?): Observable<ChangeSet<T>> {
+        var observable: Observable<ChangeSet<T>> = changesPreview
         if (predicate != null)
             observable = FilterStatic(observable, predicate).run()
 

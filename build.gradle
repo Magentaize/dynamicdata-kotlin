@@ -1,7 +1,7 @@
 buildscript {
     ext {
         kotlin_version = "1.4.0"
-        kluent_version = '1.61'
+        kluent_version = "1.61"
     }
 }
 
@@ -10,7 +10,7 @@ plugins {
 }
 
 group 'xyz.magentaize'
-version '0.0.1-SNAPSHOT'
+version '0.2.0-SNAPSHOT'
 
 repositories {
     mavenCentral()

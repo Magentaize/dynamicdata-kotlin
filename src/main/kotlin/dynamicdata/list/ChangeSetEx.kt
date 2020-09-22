@@ -8,10 +8,10 @@ import dynamicdata.list.linq.WithoutIndexEnumerator
 fun <T> Iterable<Change<T>>.yieldWithoutIndex(): Iterable<Change<T>> =
     WithoutIndexEnumerator(this)
 
-internal fun <T> IChangeSet<T>.unified() =
+internal fun <T> ChangeSet<T>.unified() =
     UnifiedChangeEnumerator(this)
 
-fun <T> IChangeSet<T>.flatten(): Iterable<ItemChange<T>> =
+fun <T> ChangeSet<T>.flatten(): Iterable<ItemChange<T>> =
     ItemChangeEnumerator(this)
 
 fun ListChangeReason.getChangeType() =
@@ -27,11 +27,9 @@ fun ListChangeReason.getChangeType() =
             ListChangeReason.RemoveRange,
             ListChangeReason.Clear
          -> ChangeType.Range
-
-        else -> throw IllegalArgumentException()
     }
 
-fun <T, R> IChangeSet<T>.transform(transformer: (T) -> R): IChangeSet<R> {
+fun <T, R> ChangeSet<T>.transform(transformer: (T) -> R): ChangeSet<R> {
     val changes = this.map {
         if (it.type == ChangeType.Item)
             Change(
@@ -45,5 +43,5 @@ fun <T, R> IChangeSet<T>.transform(transformer: (T) -> R): IChangeSet<R> {
             Change(it.reason, it.range.map(transformer), it.range.index)
     }
 
-    return ChangeSet(changes)
+    return AnonymousChangeSet(changes)
 }

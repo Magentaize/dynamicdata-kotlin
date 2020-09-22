@@ -1,18 +1,18 @@
 package dynamicdata.list.test
 
-import dynamicdata.list.IChangeSet
+import dynamicdata.list.ChangeSet
 import dynamicdata.list.ObservableList
 import dynamicdata.list.asObservableList
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 
-class ChangeSetAggregator<T>(source: Observable<IChangeSet<T>>) : Disposable {
+class ChangeSetAggregator<T>(source: Observable<ChangeSet<T>>) : Disposable {
     val data: ObservableList<T>
-    val messages: List<IChangeSet<T>>
+    val messages: List<ChangeSet<T>>
         get() = _messages.toList()
 
-    private val _messages = mutableListOf<IChangeSet<T>>()
+    private val _messages = mutableListOf<ChangeSet<T>>()
     private val cleanUp: Disposable
     private lateinit var error: Throwable
     private var disposed = false

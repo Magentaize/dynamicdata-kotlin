@@ -1,10 +1,10 @@
 package dynamicdata.aggregation
 
 import dynamicdata.kernel.aggregate
-import dynamicdata.list.IChangeSet
+import dynamicdata.list.ChangeSet
 import io.reactivex.rxjava3.core.Observable
 
-fun <T> Observable<IChangeSet<T>>.forAggregation(): Observable<AggregateChangeSet<T>> =
+fun <T> Observable<ChangeSet<T>>.forAggregation(): Observable<AggregateChangeSet<T>> =
     map { AggregateEnumerator(it) }
 
 internal fun <T, R> Observable<AggregateChangeSet<T>>.accumulate(

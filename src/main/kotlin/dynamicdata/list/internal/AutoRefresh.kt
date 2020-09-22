@@ -9,13 +9,13 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
 internal class AutoRefresh<T, R>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private val _evaluator: (T) -> Observable<R>,
     private val _bufferTimeSpan: Long? = null,
     private val _unit: TimeUnit? = null,
     private val _scheduler: Scheduler? = null
 ) {
-    fun run(): Observable<IChangeSet<T>> =
+    fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
             val allItems = mutableListOf<T>()
             val shared = _source.serialize()
@@ -43,7 +43,7 @@ internal class AutoRefresh<T, R>(
                         Change(ListChangeReason.Refresh, t, idx)
                     }
                 }
-                .map { ChangeSet(it) }
+                .map { AnonymousChangeSet(it) }
 
             //publish refreshes and underlying changes
             val publisher = shared

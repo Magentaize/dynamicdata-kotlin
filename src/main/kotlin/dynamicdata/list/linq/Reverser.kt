@@ -1,13 +1,14 @@
 package dynamicdata.list.linq
 
 import dynamicdata.list.Change
-import dynamicdata.list.IChangeSet
+import dynamicdata.list.ChangeSet
 import dynamicdata.list.ListChangeReason
+import io.reactivex.rxjava3.internal.functions.Functions
 
 internal class Reverser<T> {
     private var _length = 0
 
-    fun reverse(changes: IChangeSet<T>): Iterator<Change<T>> =
+    fun reverse(changes: ChangeSet<T>): Iterator<Change<T>> =
         iterator {
             changes.forEach { change ->
                 when (change.reason) {
@@ -54,6 +55,8 @@ internal class Reverser<T> {
                         yield(Change(ListChangeReason.Clear, change.range.reversed()))
                         _length = 0
                     }
+
+                    else -> Functions.EMPTY_ACTION
                 }
             }
         }

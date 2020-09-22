@@ -13,7 +13,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 internal class ExpireAfter<T>(
-    private val _source: ISourceList<T>,
+    private val _source: EditableObservableList<T>,
     private val _expireAfter: (T) -> Duration?,
     private val _pollingInterval: Duration?,
     private val _scheduler: Scheduler

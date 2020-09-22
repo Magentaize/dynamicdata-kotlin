@@ -1,20 +1,20 @@
 package dynamicdata.list.internal
 
 import dynamicdata.kernel.subscribeBy
-import dynamicdata.list.IChangeSet
+import dynamicdata.list.ChangeSet
 import dynamicdata.list.ObservableList
 import dynamicdata.list.asObservableList
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 
 internal class RefCount<T>(
-    private val _source: Observable<IChangeSet<T>>
+    private val _source: Observable<ChangeSet<T>>
 ) {
     private val _lock = Any()
     private var _refCount = 0
     private var _list: ObservableList<T>? = null
 
-    fun run(): Observable<IChangeSet<T>> =
+    fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
             synchronized(_lock) {
                 if (++_refCount == 1)

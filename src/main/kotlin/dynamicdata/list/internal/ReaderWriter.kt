@@ -1,8 +1,8 @@
 package dynamicdata.list.internal
 
 import dynamicdata.list.ChangeAwareList
-import dynamicdata.list.IChangeSet
-import dynamicdata.list.IExtendedList
+import dynamicdata.list.ChangeSet
+import dynamicdata.list.ExtendedList
 import dynamicdata.list.clone
 
 internal class ReaderWriter<T>() {
@@ -11,13 +11,13 @@ internal class ReaderWriter<T>() {
     private val lock = Any()
     private var updateInProgress = false
 
-    fun write(changes: IChangeSet<T>): IChangeSet<T> =
+    fun write(changes: ChangeSet<T>): ChangeSet<T> =
         synchronized(lock) {
             data.clone(changes)
             data.captureChanges()
         }
 
-    fun write(action: (IExtendedList<T>) -> Unit): IChangeSet<T> =
+    fun write(action: (ExtendedList<T>) -> Unit): ChangeSet<T> =
         synchronized(lock) {
             updateInProgress = true
             action(data)
@@ -25,7 +25,7 @@ internal class ReaderWriter<T>() {
             data.captureChanges()
         }
 
-    fun writeWithPreview(action: (IExtendedList<T>) -> Unit, previewHandler: (IChangeSet<T>) -> Unit): IChangeSet<T> =
+    fun writeWithPreview(action: (ExtendedList<T>) -> Unit, previewHandler: (ChangeSet<T>) -> Unit): ChangeSet<T> =
         synchronized(lock) {
             var copy = ChangeAwareList(data, false)
 
@@ -42,7 +42,7 @@ internal class ReaderWriter<T>() {
             return@synchronized ret
         }
 
-    fun writeNested(action: (IExtendedList<T>) -> Unit) =
+    fun writeNested(action: (ExtendedList<T>) -> Unit) =
         synchronized(lock) {
             if (!updateInProgress)
                 throw IllegalStateException("WriteNested can only be used if another write is already in progress.")

@@ -7,7 +7,7 @@ import kotlin.test.Test
 
 class SwitchFixture {
     val source = SourceList<Int>()
-    val switchable = BehaviorSubject.createDefault<ISourceList<Int>>(source)
+    val switchable = BehaviorSubject.createDefault<EditableObservableList<Int>>(source)
     val result = switchable.switch().asAggregator()
 
     @Test

@@ -2,20 +2,17 @@ package dynamicdata.list
 
 import dynamicdata.list.test.asAggregator
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.disposables.Disposable
-import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 internal class AndFixture : AndFixtureBase() {
-    override fun createObservable(): Observable<IChangeSet<Int>> {
+    override fun createObservable(): Observable<ChangeSet<Int>> {
         return source1.connect().and(source2.connect())
     }
 }
 
 internal class AndCollectionFixture : AndFixtureBase() {
-    override fun createObservable(): Observable<IChangeSet<Int>> {
+    override fun createObservable(): Observable<ChangeSet<Int>> {
         val ret = listOf(source1.connect(), source2.connect())
         return ret.and()
     }
@@ -26,7 +23,7 @@ internal abstract class AndFixtureBase {
     protected val source2 = SourceList<Int>()
     private val results = createObservable().asAggregator()
 
-    protected abstract fun createObservable(): Observable<IChangeSet<Int>>
+    protected abstract fun createObservable(): Observable<ChangeSet<Int>>
 
 //    fun Dispose() {
 //        source1.dispose()

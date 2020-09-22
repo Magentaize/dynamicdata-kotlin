@@ -1,11 +1,11 @@
 package dynamicdata.list.linq
 
 import dynamicdata.list.ChangeType
-import dynamicdata.list.IChangeSet
+import dynamicdata.list.ChangeSet
 import dynamicdata.list.ListChangeReason
 import dynamicdata.list.internal.UnifiedChange
 
-internal class UnifiedChangeEnumerator<T>(private val changeSet: IChangeSet<T>) : Iterable<UnifiedChange<T>> {
+internal class UnifiedChangeEnumerator<T>(private val changeSet: ChangeSet<T>) : Iterable<UnifiedChange<T>> {
     override fun iterator(): Iterator<UnifiedChange<T>> =
         iterator {
             changeSet.forEach { change ->

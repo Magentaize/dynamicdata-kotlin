@@ -6,12 +6,12 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 internal class TransformMany<T, R>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private val _selector: (T) -> Iterable<R>,
-    private val _childChanges: ((T) -> Observable<IChangeSet<R>>)?
+    private val _childChanges: ((T) -> Observable<ChangeSet<R>>)?
 ) {
 
-    fun run(): Observable<IChangeSet<R>> {
+    fun run(): Observable<ChangeSet<R>> {
         if (_childChanges != null)
             createWithChangeset()
 
@@ -31,7 +31,7 @@ internal class TransformMany<T, R>(
         }
     }
 
-    private fun createWithChangeset(): Observable<IChangeSet<R>> =
+    private fun createWithChangeset(): Observable<ChangeSet<R>> =
         Observable.create { emitter ->
             val result = ChangeAwareList<R>()
 
@@ -42,7 +42,7 @@ internal class TransformMany<T, R>(
             }.publish()
 
             val initial = transformed
-                .map { ChangeSet(DestinationEnumerator(it).toList()) }
+                .map { AnonymousChangeSet(DestinationEnumerator(it).toList()) }
 
             val subsequent = transformed
                 .mergeMany { it.changes }
@@ -66,7 +66,7 @@ internal class TransformMany<T, R>(
         }
 
     private class DestinationEnumerator<R>(
-        private val _changes: IChangeSet<ManyContainer<R>>
+        private val _changes: ChangeSet<ManyContainer<R>>
     ) : Iterable<Change<R>> {
         override fun iterator(): Iterator<Change<R>> =
             iterator {
@@ -110,6 +110,6 @@ internal class TransformMany<T, R>(
 
     private class ManyContainer<R>(
         val destination: Iterable<R>,
-        val changes: Observable<IChangeSet<R>>
+        val changes: Observable<ChangeSet<R>>
     )
 }

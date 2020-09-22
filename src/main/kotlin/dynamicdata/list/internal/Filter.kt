@@ -6,16 +6,17 @@ import dynamicdata.kernel.subscribeBy
 import dynamicdata.kernel.valueOrThrow
 import dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.internal.functions.Functions
 
 internal class Filter<T>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private val _policy: ListFilterPolicy
 ) {
     private lateinit var _predicate: (T) -> Boolean
     private lateinit var _predicates: Observable<(T) -> Boolean>
 
     constructor(
-        source: Observable<IChangeSet<T>>,
+        source: Observable<ChangeSet<T>>,
         predicates: Observable<(T) -> Boolean>,
         policy: ListFilterPolicy = ListFilterPolicy.CalculateDiff
     ) : this(source, policy) {
@@ -23,20 +24,20 @@ internal class Filter<T>(
     }
 
     constructor(
-        source: Observable<IChangeSet<T>>,
+        source: Observable<ChangeSet<T>>,
         predicate: (T) -> Boolean,
         policy: ListFilterPolicy = ListFilterPolicy.CalculateDiff
     ) : this(source, policy) {
         _predicate = predicate
     }
 
-    fun run(): Observable<IChangeSet<T>> =
+    fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
             var predicate = { _: T -> false }
             val all = mutableListOf<ItemWithMatch<T>>()
             val filtered = ChangeAwareList<ItemWithMatch<T>>()
             val immutableFilter = this::_predicate.isInitialized
-            val predicateChanged: Observable<IChangeSet<ItemWithMatch<T>>>
+            val predicateChanged: Observable<ChangeSet<ItemWithMatch<T>>>
 
             if (immutableFilter) {
                 predicateChanged = Observable.never()
@@ -83,9 +84,9 @@ internal class Filter<T>(
         predicate: (T) -> Boolean,
         all: MutableList<ItemWithMatch<T>>,
         filtered: ChangeAwareList<ItemWithMatch<T>>
-    ): IChangeSet<ItemWithMatch<T>> {
+    ): ChangeSet<ItemWithMatch<T>> {
         if (all.size == 0)
-            return ChangeSet.empty()
+            return AnonymousChangeSet.empty()
 
         if (_policy == ListFilterPolicy.ClearAndReplace) {
             val itemsWithMatch = all.map { ItemWithMatch(it.item, predicate(it.item), it.isMatch) }
@@ -122,8 +123,8 @@ internal class Filter<T>(
 
     private fun process(
         filtered: ChangeAwareList<ItemWithMatch<T>>,
-        changes: IChangeSet<ItemWithMatch<T>>
-    ): IChangeSet<ItemWithMatch<T>> {
+        changes: ChangeSet<ItemWithMatch<T>>
+    ): ChangeSet<ItemWithMatch<T>> {
         //Maintain all items as well as filtered list. This enables us to a) requery when the predicate changes b) check the previous state when Refresh is called
         changes.forEach {
             val change = it.item
@@ -188,6 +189,8 @@ internal class Filter<T>(
 
                 ListChangeReason.Clear ->
                     filtered.clearOrRemoveMany(it)
+
+                else -> Functions.EMPTY_ACTION
             }
         }
 

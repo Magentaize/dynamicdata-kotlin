@@ -1,6 +1,6 @@
 package dynamicdata
 
-interface IChangeSet {
+interface ChangeSet {
     val adds: Int
     val removes: Int
     val refreshes: Int

@@ -5,14 +5,14 @@ import dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 
 internal class Transformer<T, R>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     factory: (T, Optional<R>, Int) -> R,
     private val _transformOnRefresh: Boolean
 ) {
     private val _containerFactory: (T, Optional<R>, Int) -> TransformedItemContainer<T, R> =
         { item, prev, index -> TransformedItemContainer(item, factory(item, prev, index)) }
 
-    fun run(): Observable<IChangeSet<R>> =
+    fun run(): Observable<ChangeSet<R>> =
         _source.scan(ChangeAwareList<TransformedItemContainer<T, R>>()) { state, changes ->
             transform(state, changes)
             state
@@ -25,7 +25,7 @@ internal class Transformer<T, R>(
                 changed.transform { container -> container.destination }
             }
 
-    private fun transform(transformed: ChangeAwareList<TransformedItemContainer<T, R>>, changes: IChangeSet<T>) =
+    private fun transform(transformed: ChangeAwareList<TransformedItemContainer<T, R>>, changes: ChangeSet<T>) =
         changes.forEach { item ->
             val change = item.item
 

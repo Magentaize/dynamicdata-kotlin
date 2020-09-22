@@ -5,13 +5,14 @@ import dynamicdata.kernel.subscribeBy
 import dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.internal.functions.Functions
 
 internal class GroupOnMutable<T, K>(
-    private val _source: Observable<IChangeSet<T>>,
+    private val _source: Observable<ChangeSet<T>>,
     private val _selector: (T) -> K,
     private val _regroup: Observable<Unit>
 ) {
-    fun run(): Observable<IChangeSet<MutableGroup<T, K>>> =
+    fun run(): Observable<ChangeSet<MutableGroup<T, K>>> =
         Observable.create { emitter ->
             val groupings = ChangeAwareList<MutableGroup<T, K>>()
             val groupCache = mutableMapOf<K, AnonymousMutableGroup<T, K>>()
@@ -46,8 +47,8 @@ internal class GroupOnMutable<T, K>(
     private fun process(
         result: ChangeAwareList<MutableGroup<T, K>>,
         groupCache: MutableMap<K, AnonymousMutableGroup<T, K>>,
-        changes: IChangeSet<ItemWithGroupKey<T, K>>
-    ): IChangeSet<MutableGroup<T, K>> {
+        changes: ChangeSet<ItemWithGroupKey<T, K>>
+    ): ChangeSet<MutableGroup<T, K>> {
         changes.unified().groupBy { it.current.group }.forEach { grouping ->
             //lookup group and if created, add to result set
             val currentGroup = grouping.key
@@ -101,6 +102,8 @@ internal class GroupOnMutable<T, K>(
 
                         ListChangeReason.Clear ->
                             list.clear()
+
+                        else -> Functions.EMPTY_ACTION
                     }
                 }
             }
@@ -134,7 +137,7 @@ internal class GroupOnMutable<T, K>(
         result: ChangeAwareList<MutableGroup<T, K>>,
         groupCache: MutableMap<K, AnonymousMutableGroup<T, K>>,
         currentItems: List<ItemWithGroupKey<T, K>>
-    ): IChangeSet<MutableGroup<T, K>> {
+    ): ChangeSet<MutableGroup<T, K>> {
         currentItems.forEach { iwv ->
             val currentGroupKey = iwv.group
             val newGroupKey = _selector(iwv.item)

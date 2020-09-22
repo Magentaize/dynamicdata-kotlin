@@ -110,16 +110,18 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
     }
 
     override fun connect(predicate: ((T) -> Boolean)?): Observable<IChangeSet<T>> {
-        var observable = Observable.create<IChangeSet<T>> {
+        var observable = Observable.create<IChangeSet<T>> { emitter ->
             synchronized(lock) {
                 if (readerWriter.items.isNotEmpty()) {
-                    it.onNext(ChangeSet(listOf(Change(ListChangeReason.AddRange, readerWriter.items))))
+                    emitter.onNext(ChangeSet(listOf(Change(ListChangeReason.AddRange, readerWriter.items))))
                 }
 
-                val source = changes.doFinally(it::onComplete)
-                val dispose = source.subscribeBy(it)
+                val d = changes
+                    .doFinally { print(1) }
+                    .doFinally(emitter::onComplete)
+                    .subscribe({emitter.onNext(it)}, { print(it)})
 
-                it.setDisposable(dispose)
+                emitter.setDisposable(d)
             }
         }
 
@@ -139,10 +141,10 @@ class SourceList<T>(source: Observable<IChangeSet<T>>? = null) : ISourceList<T> 
     }
 
     override val sizeChanged: Observable<Int>
-        get() = Observable.unsafeCreate {
+        get() = Observable.create { emitter ->
             synchronized(lock) {
                 val source = _sizeChanged.value.startWithItem(readerWriter.size).distinctUntilChanged()
-                source.safeSubscribe(it)
+                source.subscribeBy(emitter)
             }
         }
     override val items: Iterable<T>

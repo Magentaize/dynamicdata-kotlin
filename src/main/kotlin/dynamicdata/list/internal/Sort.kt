@@ -23,7 +23,7 @@ internal class Sort<T>(
                     if (_resetThreshold > 1)
                         original.clone(changes)
 
-                    if (changes.totalChanges > _resetThreshold && _comparator != null)
+                    if (changes.totalChanges > _resetThreshold)
                         reset(original, target)
                     else
                         process(target, changes)
@@ -31,11 +31,11 @@ internal class Sort<T>(
             val resort = _resort.serialize()
                 .map { reorder(target) }
             val changeComparer = _comparatorChanged.serialize()
-                .map { changeComparer(target, _comparator) }
+                .map { changeComparer(target, it) }
 
             val d = changed.mergeWith(resort)
                 .mergeWith(changeComparer)
-                .filter { change-> change.size != 0 }
+                .filter { change -> change.size != 0 }
                 .subscribeBy(emitter)
 
             emitter.setDisposable(d)
@@ -192,7 +192,7 @@ internal class Sort<T>(
         val insertIdx = idx.inv()
 
         if (insertIdx < 0)
-            throw  SortException("Binary search has been specified, yet the sort does not yield uniqueness")
+            throw SortException("Binary search has been specified, yet the sort does not yield uniqueness")
 
         return insertIdx
     }

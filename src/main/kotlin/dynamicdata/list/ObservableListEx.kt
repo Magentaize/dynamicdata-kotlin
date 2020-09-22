@@ -14,6 +14,7 @@ import dynamicdata.list.linq.Reverser
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.internal.functions.Functions
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KProperty1
@@ -284,6 +285,14 @@ fun <T> Observable<IChangeSet<T>>.sort(
 ): Observable<IChangeSet<T>> =
     Sort(this, comparator, sortOption, resort, comparatorChanged, resetThreshold).run()
 
+fun <T> Observable<IChangeSet<T>>.sort(
+    comparatorChanged: Observable<Comparator<T>> = Observable.never(),
+    sortOption: SortOption = SortOption.None,
+    resort: Observable<Unit> = Observable.never(),
+    resetThreshold: Int = 50
+): Observable<IChangeSet<T>> =
+    Sort(this, compareBy { it.hashCode() }, sortOption, resort, comparatorChanged, resetThreshold).run()
+
 fun <T> Observable<IChangeSet<T>>.toCollection(): Observable<List<T>> =
     queryWhenChanged { it }
 
@@ -394,3 +403,12 @@ fun <T> Observable<IChangeSet<T>>.reverse(): Observable<IChangeSet<T>> =
         }
     }
 
+fun <T> ISourceList<T>.limitSizeTo(
+    limit: Int,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<Iterable<T>> =
+    require(limit > 0){"limit must be greater than zero."}.let {
+        LimitSizeTo(this, limit, scheduler)
+            .run()
+            .doOnEach { this.removeAll(it.value) }
+    }

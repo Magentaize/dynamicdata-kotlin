@@ -123,6 +123,12 @@ fun <T> Observable<ChangeSet<T>>.disposeMany(): Observable<ChangeSet<T>> =
 fun <T> Observable<ChangeSet<T>>.onItemRemoved(action: (T) -> Unit): Observable<ChangeSet<T>> =
     OnBeingRemoved(this, action).run()
 
+fun <T> Observable<ChangeSet<T>>.xor(vararg others: Observable<ChangeSet<T>>) =
+    combine(CombineOperator.Xor, *others)
+
+fun <T> Collection<Observable<ChangeSet<T>>>.xor(): Observable<ChangeSet<T>> =
+    combine(CombineOperator.Xor)
+
 fun <T> Observable<ChangeSet<T>>.or(vararg others: Observable<ChangeSet<T>>) =
     combine(CombineOperator.Or, *others)
 

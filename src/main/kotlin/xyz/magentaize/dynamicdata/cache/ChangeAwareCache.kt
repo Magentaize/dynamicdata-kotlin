@@ -1,9 +1,11 @@
 package xyz.magentaize.dynamicdata.cache
 
-class ChangeAwareCache<TObject, TKey>(
-    private var changes: AnonymousChangeSet<TObject, TKey>,
-    private var data: MutableMap<TKey, TObject>
-) : ICache<TObject, TKey> {
+import xyz.magentaize.dynamicdata.kernel.Optional
+
+class ChangeAwareCache<T, TKey>(
+    private var changes: AnonymousChangeSet<T, TKey>,
+    private var data: MutableMap<TKey, T>
+) : ICache<T, TKey> {
 
     constructor() : this(AnonymousChangeSet(), LinkedHashMap())
 
@@ -11,32 +13,36 @@ class ChangeAwareCache<TObject, TKey>(
         AnonymousChangeSet(capacity), LinkedHashMap(capacity)
     )
 
-    constructor(data: Map<TKey, TObject>) : this(
+    constructor(data: Map<TKey, T>) : this(
         AnonymousChangeSet(), data.toMutableMap()
     )
 
     val size: Int
         get() = data.size
 
-    override val keyValues: Map<TKey, TObject>
+    override val keyValues: Map<TKey, T>
         get() = data.toMap()
 
-    override val items: Collection<TObject>
+    override val items: Collection<T>
         get() = data.values
 
     override val keys: Collection<TKey>
         get() = data.keys
 
-    override fun lookup(key: TKey): TObject? {
-        return data.getOrDefault(key, null)
+    override fun lookup(key: TKey): Optional<T> {
+        val d = data[key]
+        return if (d == null)
+            Optional.empty()
+        else
+            Optional.of(d)
     }
 
-    fun add(item: TObject, key: TKey) {
+    fun add(item: T, key: TKey) {
         changes.add(Change(ChangeReason.Add, key, item))
         data[key] = item
     }
 
-    override fun addOrUpdate(item: TObject, key: TKey) {
+    override fun addOrUpdate(item: T, key: TKey) {
         val ex = data.contains(key)
         changes.add(
             if (ex) Change(ChangeReason.Update, key, item, data[key]) else Change(
@@ -78,7 +84,7 @@ class ChangeAwareCache<TObject, TKey>(
         data.clear()
     }
 
-    fun captureChanges(): ChangeSet<TObject, TKey> {
+    fun captureChanges(): ChangeSet<T, TKey> {
         if (changes.count() == 0) return AnonymousChangeSet.empty()
 
         val copy = changes
@@ -86,7 +92,7 @@ class ChangeAwareCache<TObject, TKey>(
         return copy
     }
 
-    override fun clone(changes: AnonymousChangeSet<TObject, TKey>) {
+    override fun clone(changes: ChangeSet<T, TKey>) {
         TODO("Not yet implemented")
     }
 }

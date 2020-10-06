@@ -29,3 +29,6 @@ fun <T> Optional<T>.valueOrThrow(factory: () -> Exception): T {
 
     throw factory()
 }
+
+fun <T> Iterable<Optional<T>>.mapValues() =
+    filter { it.hasValue }.map { it.value }

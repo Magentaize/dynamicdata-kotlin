@@ -1,15 +1,15 @@
 package xyz.magentaize.dynamicdata.cache
 
-import java.util.*
+import xyz.magentaize.dynamicdata.kernel.Optional
 
-interface IQuery<TObject, TKey> {
-    fun lookup(key: TKey): TObject?
+interface IQuery<T, TKey> {
+    fun lookup(key: TKey): Optional<T>
 
     val keys: Iterable<TKey>
 
-    val items: Iterable<TObject>
+    val items: Iterable<T>
 
-    val keyValues: Map<TKey, TObject>
+    val keyValues: Map<TKey, T>
 
     //val count: Int
 }

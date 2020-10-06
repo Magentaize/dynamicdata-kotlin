@@ -2,32 +2,35 @@ package xyz.magentaize.dynamicdata.cache.internal
 
 import xyz.magentaize.dynamicdata.cache.ChangeReason
 import xyz.magentaize.dynamicdata.cache.AnonymousChangeSet
+import xyz.magentaize.dynamicdata.cache.ChangeSet
 import xyz.magentaize.dynamicdata.cache.ICache
+import xyz.magentaize.dynamicdata.kernel.Optional
+import xyz.magentaize.dynamicdata.kernel.lookup
 
-internal class Cache<TObject, TKey> : ICache<TObject, TKey> {
-    private val data: MutableMap<TKey, TObject>
+internal class Cache<T, TKey> : ICache<T, TKey> {
+    private val data: MutableMap<TKey, T>
 
     constructor(capacity: Int = -1) {
         data = if (capacity > 1) LinkedHashMap(capacity) else LinkedHashMap()
     }
 
-    constructor(data: Map<TKey, TObject>) {
+    constructor(data: Map<TKey, T>) {
         this.data = data.toMutableMap()
     }
 
     val size: Int
         get() = data.size
 
-    override val keyValues: Map<TKey, TObject>
+    override val keyValues: Map<TKey, T>
         get() = data
 
-    override val items: Iterable<TObject>
+    override val items: Iterable<T>
         get() = data.values
 
     override val keys: Iterable<TKey>
         get() = data.keys
 
-    override fun clone(changes: AnonymousChangeSet<TObject, TKey>) =
+    override fun clone(changes: ChangeSet<T, TKey>) =
         changes.forEach {
             when (it.reason) {
                 ChangeReason.Add, ChangeReason.Update -> data[it.key] = it.current
@@ -37,7 +40,7 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey> {
             }
         }
 
-    override fun addOrUpdate(item: TObject, key: TKey) {
+    override fun addOrUpdate(item: T, key: TKey) {
         data[key] = item
     }
 
@@ -63,6 +66,6 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey> {
         TODO("Not yet implemented")
     }
 
-    override fun lookup(key: TKey): TObject? =
-        data[key]
+    override fun lookup(key: TKey): Optional<T> =
+        data.lookup(key)
 }

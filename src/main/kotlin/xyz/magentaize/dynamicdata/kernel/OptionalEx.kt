@@ -11,7 +11,7 @@ fun <T, R> Optional<T>.convertOr(
 ): R =
     if (hasValue) converter(value) else fallbackConverter()
 
-fun <T, R> Map<T, R>.lookup(key: T): Optional<R> {
+fun <K, V> Map<K, V>.lookup(key: K): Optional<V> {
     val ret = this.getOrDefault(key, null)
     return if (ret != null) Optional.of(ret) else Optional.empty()
 }

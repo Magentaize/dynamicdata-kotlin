@@ -2,10 +2,10 @@ package xyz.magentaize.dynamicdata.cache
 
 import xyz.magentaize.dynamicdata.kernel.Optional
 
-class ChangeAwareCache<T, TKey>(
-    private var changes: AnonymousChangeSet<T, TKey>,
-    private var data: MutableMap<TKey, T>
-) : ICache<T, TKey> {
+class ChangeAwareCache<K, V>(
+    private var changes: AnonymousChangeSet<K, V>,
+    private var data: MutableMap<K, V>
+) : ICache<K, V> {
 
     constructor() : this(AnonymousChangeSet(), LinkedHashMap())
 
@@ -13,23 +13,23 @@ class ChangeAwareCache<T, TKey>(
         AnonymousChangeSet(capacity), LinkedHashMap(capacity)
     )
 
-    constructor(data: Map<TKey, T>) : this(
+    constructor(data: Map<K, V>) : this(
         AnonymousChangeSet(), data.toMutableMap()
     )
 
     val size: Int
         get() = data.size
 
-    override val keyValues: Map<TKey, T>
+    override val keyValues: Map<K, V>
         get() = data.toMap()
 
-    override val items: Collection<T>
+    override val items: Collection<V>
         get() = data.values
 
-    override val keys: Collection<TKey>
+    override val keys: Collection<K>
         get() = data.keys
 
-    override fun lookup(key: TKey): Optional<T> {
+    override fun lookup(key: K): Optional<V> {
         val d = data[key]
         return if (d == null)
             Optional.empty()
@@ -37,15 +37,15 @@ class ChangeAwareCache<T, TKey>(
             Optional.of(d)
     }
 
-    fun add(item: T, key: TKey) {
+    fun add(item: V, key: K) {
         changes.add(Change(ChangeReason.Add, key, item))
         data[key] = item
     }
 
-    override fun addOrUpdate(item: T, key: TKey) {
+    override fun addOrUpdate(item: V, key: K) {
         val ex = data.contains(key)
         changes.add(
-            if (ex) Change(ChangeReason.Update, key, item, data[key]) else Change(
+            if (ex) Change(ChangeReason.Update, key, item, Optional.ofNullable(data[key])) else Change(
                 ChangeReason.Add,
                 key,
                 item
@@ -54,21 +54,21 @@ class ChangeAwareCache<T, TKey>(
         data[key] = item
     }
 
-    override fun remove(keys: Iterable<TKey>) {
+    override fun remove(keys: Iterable<K>) {
         keys.forEach { remove(it) }
     }
 
-    override fun remove(key: TKey) {
+    override fun remove(key: K) {
         val ex = data.remove(key)
         if (ex != null)
             changes.add(Change(ChangeReason.Remove, key, ex))
     }
 
-    override fun refresh(keys: Iterable<TKey>) {
+    override fun refresh(keys: Iterable<K>) {
         keys.forEach { refresh(it) }
     }
 
-    override fun refresh(key: TKey) {
+    override fun refresh(key: K) {
         val ex = data[key]
         if (ex != null)
             changes.add(Change(ChangeReason.Refresh, key, ex))
@@ -84,7 +84,7 @@ class ChangeAwareCache<T, TKey>(
         data.clear()
     }
 
-    fun captureChanges(): ChangeSet<T, TKey> {
+    fun captureChanges(): ChangeSet<K, V> {
         if (changes.count() == 0) return AnonymousChangeSet.empty()
 
         val copy = changes
@@ -92,7 +92,7 @@ class ChangeAwareCache<T, TKey>(
         return copy
     }
 
-    override fun clone(changes: ChangeSet<T, TKey>) {
+    override fun clone(changes: ChangeSet<K, V>) {
         TODO("Not yet implemented")
     }
 }

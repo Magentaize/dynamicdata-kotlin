@@ -1,16 +1,16 @@
 package xyz.magentaize.dynamicdata.cache
 
-class AnonymousChangeSet<TObject, TKey> : ArrayList<Change<TObject, TKey>>, ChangeSet<TObject, TKey> {
+class AnonymousChangeSet<K, V> : ArrayList<Change<K, V>>, ChangeSet<K, V> {
     companion object {
         private val INSTANCE: AnonymousChangeSet<Any?, Any?> = AnonymousChangeSet()
 
-        fun <TObject, TKey> empty(): AnonymousChangeSet<TObject, TKey> {
-            return INSTANCE as AnonymousChangeSet<TObject, TKey>
+        fun <K, V> empty(): AnonymousChangeSet<K, V> {
+            return INSTANCE as AnonymousChangeSet<K, V>
         }
     }
 
     constructor()
-    constructor(collection: Collection<Change<TObject, TKey>>) : super(collection)
+    constructor(collection: Collection<Change<K, V>>) : super(collection)
     constructor(capacity: Int) : super(capacity)
 
     override val size: Int

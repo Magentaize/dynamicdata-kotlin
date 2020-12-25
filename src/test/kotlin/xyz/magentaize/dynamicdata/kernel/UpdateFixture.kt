@@ -19,7 +19,7 @@ internal class UpdateFixture {
         update.key shouldBe "Person"
         update.reason shouldBe ChangeReason.Add
         update.current shouldBe person
-        update.previous shouldBe null
+        update.previous shouldBe Optional.empty()
     }
 
     @Test
@@ -30,20 +30,20 @@ internal class UpdateFixture {
         update.key shouldBe "Person"
         update.reason shouldBe ChangeReason.Remove
         update.current shouldBe person
-        update.previous shouldBe null
+        update.previous shouldBe Optional.empty()
     }
 
     @Test
     fun update() {
         val current = Person("Person", 10)
         val previous = Person("Person", 9)
-        val update = Change(ChangeReason.Update, "Person", current, previous)
+        val update = Change(ChangeReason.Update, "Person", current, Optional.of(previous))
 
         update.key shouldBe "Person"
         update.reason shouldBe ChangeReason.Update
         update.current shouldBe current
-        update.previous `should not be` null
-        update.previous shouldBe previous
+        update.previous `should not be` Optional.empty<Person>()
+        update.previous.value shouldBe previous
     }
 
     @Test

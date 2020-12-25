@@ -1,12 +1,12 @@
 package xyz.magentaize.dynamicdata.cache
 
-interface ICache<TObject, TKey> : IQuery<TObject, TKey> {
-    fun clone(changes: ChangeSet<TObject, TKey>)
-    fun addOrUpdate(item: TObject, key: TKey)
-    fun remove(key: TKey)
-    fun remove(keys: Iterable<TKey>)
+interface ICache<K, V> : IQuery<K, V> {
+    fun clone(changes: ChangeSet<K, V>)
+    fun addOrUpdate(item: V, key: K)
+    fun remove(key: K)
+    fun remove(keys: Iterable<K>)
     fun clear()
     fun refresh()
-    fun refresh(keys: Iterable<TKey>)
-    fun refresh(key: TKey)
+    fun refresh(keys: Iterable<K>)
+    fun refresh(key: K)
 }

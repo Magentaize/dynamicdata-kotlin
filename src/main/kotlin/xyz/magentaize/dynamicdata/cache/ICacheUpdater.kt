@@ -1,23 +1,23 @@
 package xyz.magentaize.dynamicdata.cache
 
-interface ICacheUpdater<TObject, TKey> : IQuery<TObject, TKey> {
+interface ICacheUpdater<K, V> : IQuery<K, V> {
     //fun addOrUpdate(keyValuePairs: Iterable<Pair<TKey, TObject>>)
-    fun addOrUpdate(item: Pair<TObject, TKey>)
-    fun addOrUpdate(item: TObject, key: TKey)
+    fun addOrUpdate(item: Pair<K, V>)
+    fun addOrUpdate(item: V, key: K)
     fun refresh()
-    fun refresh(keys: Iterable<TKey>)
-    fun refresh(key: TKey)
-    fun removeItem(keys: Iterable<TObject>)
+    fun refresh(keys: Iterable<K>)
+    fun refresh(key: K)
+    fun removeItem(keys: Iterable<V>)
 
     /*Overload of remove due to ambiguous method when TObject and TKey are of the same type*/
-    fun remove(keys: Iterable<TKey>)
-    fun removeItem(key: TObject)
-    fun remove(key: TKey)
-    fun removeKvp(items: Iterable<Pair<TKey, TObject>>)
-    fun removePair(item: Pair<TKey, TObject>)
-    fun removeKvp(item: Pair<TKey, TObject>)
-    fun clone(changes: AnonymousChangeSet<TObject, TKey>)
+    fun remove(keys: Iterable<K>)
+    fun removeItem(key: V)
+    fun remove(key: K)
+    fun removeKvp(items: Iterable<Pair<K, V>>)
+    fun removePair(item: Pair<K, V>)
+    fun removeKvp(item: Pair<K, V>)
+    fun clone(changes: AnonymousChangeSet<K, V>)
     fun clear()
-    fun getKey(item: TObject): TKey
-    fun getKeyValues(items: Iterable<TObject>): Map<TKey, TObject>
+    fun getKey(item: V): K
+    fun getKeyValues(items: Iterable<V>): Map<K, V>
 }

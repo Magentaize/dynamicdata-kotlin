@@ -9,7 +9,7 @@ import org.amshove.kluent.shouldBeEqualTo
 import kotlin.test.Test
 
 internal class SourceUpdaterFixture {
-    private val cache = ChangeAwareCache<Person, String>()
+    private val cache = ChangeAwareCache<String, Person>()
     private val updater = CacheUpdater(cache) { it.name }
     private val key = "Adult1"
 
@@ -19,7 +19,7 @@ internal class SourceUpdaterFixture {
         updater.addOrUpdate(person, "Adult1")
         val updates = cache.captureChanges()
 
-        cache.lookup("Adult1") shouldBeEqualTo person
+        cache.lookup("Adult1").value shouldBeEqualTo person
         cache.size shouldBeEqualTo 1
         1 shouldBeEqualTo updates.count()
         // TODO
@@ -66,7 +66,7 @@ internal class SourceUpdaterFixture {
         updater.addOrUpdate(people)
         val updates = cache.captureChanges()
 
-        cache.lookup("Name1")!!.age shouldBeEqualTo 100
+        cache.lookup("Name1").value.age shouldBeEqualTo 100
         cache.size shouldBeEqualTo 1
         99 shouldBeEqualTo updates.count { it.reason == ChangeReason.Update }
         1 shouldBeEqualTo updates.count { it.reason == ChangeReason.Add }
@@ -95,7 +95,7 @@ internal class SourceUpdaterFixture {
         updater.addOrUpdate(updated)
         val updates = cache.captureChanges()
 
-        cache.lookup(key) shouldBe updated
+        cache.lookup(key).value shouldBe updated
         cache.size shouldBeEqualTo 1
         1 shouldBeEqualTo updates.count { it.reason == ChangeReason.Add }
         1 shouldBeEqualTo updates.count { it.reason == ChangeReason.Update }

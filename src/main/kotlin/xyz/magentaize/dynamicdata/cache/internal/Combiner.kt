@@ -8,18 +8,18 @@ import xyz.magentaize.dynamicdata.cache.ChangeReason
 import xyz.magentaize.dynamicdata.cache.ChangeSet
 import xyz.magentaize.dynamicdata.kernel.mapValues
 
-internal class Combiner<T, K>(
+internal class Combiner<K, V>(
     private val _type: CombineOperator,
-    private val _updatedCallback: (ChangeSet<T, K>) -> Unit
+    private val _updatedCallback: (ChangeSet<K, V>) -> Unit
 ) {
-    private val _sourceCaches = mutableListOf<Cache<T, K>>()
-    private val _combinedCache = ChangeAwareCache<T, K>()
+    private val _sourceCaches = mutableListOf<Cache<K, V>>()
+    private val _combinedCache = ChangeAwareCache<K, V>()
     private val _lock = Any()
 
-    fun run(source: List<Observable<ChangeSet<T, K>>>): Disposable {
+    fun run(source: List<Observable<ChangeSet<K, V>>>): Disposable {
         val d = CompositeDisposable()
         synchronized(_lock) {
-            val caches = (0..source.size).map { Cache<T, K>() }
+            val caches = (0..source.size).map { Cache<K, V>() }
             _sourceCaches.addAll(caches)
 
             source.zip(_sourceCaches) { item, cache ->
@@ -31,8 +31,8 @@ internal class Combiner<T, K>(
         return d
     }
 
-    fun update(cache: Cache<T, K>, updates: ChangeSet<T, K>) {
-        val notifications: ChangeSet<T, K>
+    fun update(cache: Cache<K, V>, updates: ChangeSet<K, V>) {
+        val notifications: ChangeSet<K, V>
         synchronized(_lock) {
             cache.clone(updates)
             notifications = updateCombined(updates)
@@ -42,7 +42,7 @@ internal class Combiner<T, K>(
         }
     }
 
-    fun updateCombined(updates: ChangeSet<T, K>): ChangeSet<T, K> {
+    fun updateCombined(updates: ChangeSet<K, V>): ChangeSet<K, V> {
         updates.forEach { update ->
             val key = update.key
             when (update.reason) {

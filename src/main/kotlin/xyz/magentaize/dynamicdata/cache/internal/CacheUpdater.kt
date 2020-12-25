@@ -5,76 +5,76 @@ import xyz.magentaize.dynamicdata.cache.ICache
 import xyz.magentaize.dynamicdata.cache.IQuery
 import xyz.magentaize.dynamicdata.cache.ISourceUpdater
 
-internal class CacheUpdater<TObject, TKey>(
-    private val cache: ICache<TObject, TKey>,
-    private val keySelector: (TObject) -> TKey = { throw IllegalStateException() }
-) : ISourceUpdater<TObject, TKey>, IQuery<TObject, TKey> by cache {
+internal class CacheUpdater<K, V>(
+    private val cache: ICache<K, V>,
+    private val keySelector: (V) -> K = { throw IllegalStateException() }
+) : ISourceUpdater<K, V>, IQuery<K, V> by cache {
 
-    constructor(data: Map<TKey, TObject>, keySelector: (TObject) -> TKey = { throw IllegalStateException() })
+    constructor(data: Map<K, V>, keySelector: (V) -> K = { throw IllegalStateException() })
             : this(Cache(data), keySelector)
 
-    override fun load(items: Iterable<TObject>) {
+    override fun load(items: Iterable<V>) {
         clear()
         addOrUpdate(items)
     }
 
-    fun addOrUpdate(item: TObject) =
+    fun addOrUpdate(item: V) =
         cache.addOrUpdate(item, keySelector(item))
 
-    override fun addOrUpdate(items: Iterable<TObject>) =
+    override fun addOrUpdate(items: Iterable<V>) =
         items.forEach { cache.addOrUpdate(it, keySelector(it)) }
 
-    override fun addOrUpdate(item: Pair<TObject, TKey>) =
+    override fun addOrUpdate(item: Pair<K, V>) =
         TODO()
 
-    override fun addOrUpdate(item: TObject, key: TKey) =
+    override fun addOrUpdate(item: V, key: K) =
         cache.addOrUpdate(item, key)
 
     override fun refresh() =
         cache.refresh()
 
-    override fun refresh(keys: Iterable<TKey>) =
+    override fun refresh(keys: Iterable<K>) =
         keys.forEach { refresh(it) }
 
-    override fun refresh(key: TKey) {
+    override fun refresh(key: K) {
         TODO("Not yet implemented")
     }
 
-    override fun removeItem(items: Iterable<TObject>) =
+    override fun removeItem(items: Iterable<V>) =
         items.forEach { removeItem(it) }
 
-    override fun remove(keys: Iterable<TKey>) {
+    override fun remove(keys: Iterable<K>) {
         TODO("Not yet implemented")
     }
 
-    override fun removeItem(item: TObject) =
+    override fun removeItem(item: V) =
         cache.remove(keySelector(item))
 
-    override fun remove(key: TKey) =
+    override fun remove(key: K) =
         cache.remove(key)
 
-    override fun removeKvp(items: Iterable<Pair<TKey, TObject>>) {
+    override fun removeKvp(items: Iterable<Pair<K, V>>) {
         TODO("Not yet implemented")
     }
 
-    override fun removePair(item: Pair<TKey, TObject>) {
+    override fun removePair(item: Pair<K, V>) {
         TODO("Not yet implemented")
     }
 
-    override fun removeKvp(item: Pair<TKey, TObject>) {
+    override fun removeKvp(item: Pair<K, V>) {
         TODO("Not yet implemented")
     }
 
-    override fun clone(changes: AnonymousChangeSet<TObject, TKey>) {
+    override fun clone(changes: AnonymousChangeSet<K, V>) {
         TODO("Not yet implemented")
     }
 
     override fun clear() =
         cache.clear()
 
-    override fun getKey(item: TObject): TKey =
+    override fun getKey(item: V): K =
         keySelector(item)
 
-    override fun getKeyValues(items: Iterable<TObject>): Map<TKey, TObject> =
+    override fun getKeyValues(items: Iterable<V>): Map<K, V> =
         items.associateBy(keySelector)
 }

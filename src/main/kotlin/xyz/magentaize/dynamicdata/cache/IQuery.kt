@@ -2,14 +2,14 @@ package xyz.magentaize.dynamicdata.cache
 
 import xyz.magentaize.dynamicdata.kernel.Optional
 
-interface IQuery<T, TKey> {
-    fun lookup(key: TKey): Optional<T>
+interface IQuery<K, V> {
+    fun lookup(key: K): Optional<V>
 
-    val keys: Iterable<TKey>
+    val keys: Iterable<K>
 
-    val items: Iterable<T>
+    val items: Iterable<V>
 
-    val keyValues: Map<TKey, T>
+    val keyValues: Map<K, V>
 
     //val count: Int
 }

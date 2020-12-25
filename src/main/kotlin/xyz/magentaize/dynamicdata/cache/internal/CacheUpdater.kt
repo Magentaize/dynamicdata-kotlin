@@ -1,9 +1,6 @@
 package xyz.magentaize.dynamicdata.cache.internal
 
-import xyz.magentaize.dynamicdata.cache.AnonymousChangeSet
-import xyz.magentaize.dynamicdata.cache.ICache
-import xyz.magentaize.dynamicdata.cache.IQuery
-import xyz.magentaize.dynamicdata.cache.ISourceUpdater
+import xyz.magentaize.dynamicdata.cache.*
 
 internal class CacheUpdater<K, V>(
     private val cache: ICache<K, V>,
@@ -65,7 +62,7 @@ internal class CacheUpdater<K, V>(
         TODO("Not yet implemented")
     }
 
-    override fun clone(changes: AnonymousChangeSet<K, V>) {
+    override fun clone(changes: ChangeSet<K, V>) {
         TODO("Not yet implemented")
     }
 

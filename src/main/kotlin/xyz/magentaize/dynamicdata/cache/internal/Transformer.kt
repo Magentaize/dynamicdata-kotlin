@@ -55,6 +55,7 @@ internal class Transformer<K, E, R>(
 
             return@scan cache
         }
+            .skip(1)
             .filter { it != null }
             .map { it!!.captureChanges() }
             .notEmpty()

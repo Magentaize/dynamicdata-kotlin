@@ -123,6 +123,9 @@ fun <K, V, R> Observable<ChangeSet<K, V>>.mergeMany(selector: (V) -> Observable<
 fun <K, V, R> Observable<ChangeSet<K, V>>.mergeMany(selector: (K, V) -> Observable<R>): Observable<R> =
     MergeMany(this, selector).run()
 
+fun <K, V> Observable<ChangeSet<K, V>>.filter(filter: (V) -> Boolean): Observable<ChangeSet<K, V>> =
+    StaticFilter(this, filter).run()
+
 private fun <K, V> Iterable<Observable<ChangeSet<K, V>>>.combine(type: CombineOperator): Observable<ChangeSet<K, V>> =
     Observable.create { emitter ->
         fun update(updates: ChangeSet<K, V>) {

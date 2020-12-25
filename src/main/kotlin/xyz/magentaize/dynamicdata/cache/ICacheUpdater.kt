@@ -16,7 +16,7 @@ interface ICacheUpdater<K, V> : IQuery<K, V> {
     fun removeKvp(items: Iterable<Pair<K, V>>)
     fun removePair(item: Pair<K, V>)
     fun removeKvp(item: Pair<K, V>)
-    fun clone(changes: AnonymousChangeSet<K, V>)
+    fun clone(changes: ChangeSet<K, V>)
     fun clear()
     fun getKey(item: V): K
     fun getKeyValues(items: Iterable<V>): Map<K, V>

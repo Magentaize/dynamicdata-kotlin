@@ -3,48 +3,47 @@ package xyz.magentaize.dynamicdata.cache
 import io.reactivex.rxjava3.core.Observable
 import xyz.magentaize.dynamicdata.kernel.Optional
 
-class SourceCache<K, V> : EditableSourceCache<K, V> {
-    override fun connect(predicate: ((V) -> Boolean)?): Observable<ChangeSet<K, V>> {
-        TODO("Not yet implemented")
-    }
+class SourceCache<K, V>(
+    override val keySelector: (V) -> K
+) : EditableSourceCache<K, V> {
+    private val _innerCache: AnonymousObservableCache<K, V> = AnonymousObservableCache(keySelector)
+    private var _isDisposed = false
 
-    override fun preview(predicate: ((V) -> Boolean)?): Observable<ChangeSet<K, V>> {
-        TODO("Not yet implemented")
-    }
+    override fun connect(predicate: ((V) -> Boolean)?): Observable<ChangeSet<K, V>> =
+        _innerCache.connect(predicate)
 
-    override fun watch(key: K): Observable<Change<K, V>> {
-        TODO("Not yet implemented")
-    }
+    override fun preview(predicate: ((V) -> Boolean)?): Observable<ChangeSet<K, V>> =
+        _innerCache.preview(predicate)
 
-    override val sizeChanged: Observable<Int>
-        get() = TODO("Not yet implemented")
+    override fun watch(key: K): Observable<Change<K, V>> =
+        _innerCache.watch(key)
 
     override fun dispose() {
-        TODO("Not yet implemented")
+        _innerCache.dispose()
+        _isDisposed = true
     }
 
-    override fun isDisposed(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isDisposed(): Boolean =
+        _isDisposed
 
-    override val keySelector: (V) -> K
-        get() = TODO("Not yet implemented")
+    override fun edit(updateAction: (ISourceUpdater<K, V>) -> Unit) =
+        _innerCache.updateFromSource(updateAction)
 
-    override fun edit(updateAction: ISourceUpdater<K, V>) {
-        TODO("Not yet implemented")
-    }
+    override fun lookup(key: K): Optional<V> =
+        _innerCache.lookup(key)
+
+    override val sizeChanged: Observable<Int>
+        get() = _innerCache.sizeChanged
 
     override val size: Int
-        get() = TODO("Not yet implemented")
+        get() = _innerCache.size
+
     override val items: Iterable<V>
-        get() = TODO("Not yet implemented")
+        get() = _innerCache.items
+
     override val keys: Iterable<K>
-        get() = TODO("Not yet implemented")
+        get() = _innerCache.keys
+
     override val keyValues: Iterable<Map.Entry<K, V>>
-        get() = TODO("Not yet implemented")
-
-    override fun lookup(key: K): Optional<V> {
-        TODO("Not yet implemented")
-    }
-
+        get() = _innerCache.keyValues
 }

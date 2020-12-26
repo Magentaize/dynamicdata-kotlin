@@ -39,10 +39,4 @@ class AnonymousChangeSet<K, V> : ArrayList<Change<K, V>>, ChangeSet<K, V> {
 
     private fun count(reason: ChangeReason) =
         count { it.reason == reason }
-
-    override fun toString(): String =
-        "ChangeSet: TODO"
-
-    private inline fun <reified TObject> to() =
-        TObject::class.java
 }

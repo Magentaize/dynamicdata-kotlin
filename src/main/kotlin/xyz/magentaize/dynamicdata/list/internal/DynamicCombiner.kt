@@ -5,6 +5,7 @@ import xyz.magentaize.dynamicdata.list.*
 import xyz.magentaize.dynamicdata.list.ChangeAwareListWithRefCounts
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 
 internal class DynamicCombiner<T>(
     private val _source: ObservableList<Observable<ChangeSet<T>>>,
@@ -13,7 +14,7 @@ internal class DynamicCombiner<T>(
     private val _lock = Any()
 
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             //this is the resulting list which produces all notifications
             val resultList = ChangeAwareListWithRefCounts<T>()
 
@@ -21,7 +22,7 @@ internal class DynamicCombiner<T>(
             //This populates a RefTracker when the original source is subscribed to
             val sourceLists = _source.connect()
                 .serialize()
-                .transform { it:Observable<ChangeSet<T>> -> MergeContainer(it) }
+                .transform { MergeContainer(it) }
                 .asObservableList()
 
             //merge the items back together
@@ -79,14 +80,12 @@ internal class DynamicCombiner<T>(
                 }
                 .subscribe()
 
-            val d = CompositeDisposable(
+            return@create CompositeDisposable(
                 sourceLists,
                 allChanges,
                 removedItem,
                 sourceChanged
             )
-
-            emitter.setDisposable(d)
         }
 
     private fun updateItemSetMemberships(
@@ -124,7 +123,6 @@ internal class DynamicCombiner<T>(
                 val others = sourceLists.drop(1).any { it.tracker.contains(item) }
                 first && !others
             }
-            else -> throw IllegalArgumentException("Unknown CombineOperator $_type")
         }
     }
 

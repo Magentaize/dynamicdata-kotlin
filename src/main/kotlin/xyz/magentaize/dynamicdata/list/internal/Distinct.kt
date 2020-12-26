@@ -1,30 +1,26 @@
 package xyz.magentaize.dynamicdata.list.internal
 
-import xyz.magentaize.dynamicdata.kernel.convertOr
-import xyz.magentaize.dynamicdata.kernel.ifHasValue
-import xyz.magentaize.dynamicdata.kernel.lookup
-import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import xyz.magentaize.dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
+import xyz.magentaize.dynamicdata.kernel.*
+import xyz.magentaize.dynamicdata.kernel.subscribeBy
 
 internal class Distinct<T, R>(
     private val _source: Observable<ChangeSet<T>>,
     private val _selector: (T) -> R
 ) {
     fun run(): Observable<ChangeSet<R>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val valueCounters = mutableMapOf<R, Int>()
             val result = ChangeAwareList<R>()
 
-            val d = _source.transformWithOptional<T, ItemWithMatch<T, R>>({ t, prev, _ ->
+            return@create _source.transformWithOptional<T, ItemWithMatch<T, R>>({ t, prev, _ ->
                 val previousValue = prev.convertOr({ it.value }, { null as R })
                 ItemWithMatch(t, _selector(t), previousValue)
             }, true)
                 .map { changes -> process(valueCounters, result, changes) }
                 .notEmpty()
                 .subscribeBy(emitter)
-
-            emitter.setDisposable(d)
         }
 
     private fun process(

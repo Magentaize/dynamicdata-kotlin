@@ -7,13 +7,14 @@ import io.reactivex.rxjava3.subjects.PublishSubject
 import org.amshove.kluent.shouldBeEqualTo
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
+import kotlin.time.minutes
 
 internal class BatchIfWithTimeOutFixture {
     private val scheduler = TestScheduler()
     private val pausingSubject = PublishSubject.create<Boolean>()
     private val source = SourceList<Person>()
     private val results = source.connect()
-        .bufferIf(pausingSubject, 1, TimeUnit.MINUTES, scheduler)
+        .bufferIf(pausingSubject, 1.minutes, scheduler)
         .asAggregator()
 
     @Test

@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -20,9 +21,9 @@ internal class ToObservableChangeSet<T>(
     private val _scheduler: Scheduler = Schedulers.computation()
 ) {
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             if (_expireAfter == null && _limitSizeTo < 1) {
-                val d = _source.scan(ChangeAwareList<T>()) { state, latest ->
+                return@create _source.scan(ChangeAwareList<T>()) { state, latest ->
                     val items = latest.toList()
                     state.addAll(items)
                     return@scan state
@@ -30,10 +31,6 @@ internal class ToObservableChangeSet<T>(
                     .skip(1)
                     .map { it.captureChanges() }
                     .subscribeBy(emitter)
-
-                emitter.setDisposable(d)
-
-                return@create
             }
 
             val orderItemWasAdded = AtomicLong(-1)
@@ -75,12 +72,10 @@ internal class ToObservableChangeSet<T>(
                 .notEmpty()
                 .subscribeBy(emitter)
 
-            val d = CompositeDisposable(
+            return@create CompositeDisposable(
                 publisher,
                 sizeLimited.connect()
             )
-
-            emitter.setDisposable(d)
         }
 
     private fun CreateExpirableItem(latest: T, order: AtomicLong): ExpirableItem<T> {

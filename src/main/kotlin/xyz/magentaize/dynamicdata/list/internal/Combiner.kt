@@ -8,6 +8,7 @@ import xyz.magentaize.dynamicdata.list.flatten
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.internal.functions.Functions
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 
 internal class Combiner<T>(
     private val _source: Collection<Observable<ChangeSet<T>>>,
@@ -16,7 +17,7 @@ internal class Combiner<T>(
     private val _lock = Any()
 
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val disposable = CompositeDisposable()
             val resultList = ChangeAwareListWithRefCounts<T>()
 
@@ -35,7 +36,7 @@ internal class Combiner<T>(
                 }
             }
 
-            emitter.setDisposable(disposable)
+            return@create disposable
         }
 
     private fun cloneSourceList(tracker: ReferenceCountTracker<T>, changes: ChangeSet<T>) =
@@ -120,6 +121,5 @@ internal class Combiner<T>(
                 val others = sourceLists.drop(1).any { it.contains(item) }
                 first && !others
             }
-            else -> throw IllegalArgumentException("item")
         }
 }

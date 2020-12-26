@@ -18,43 +18,46 @@ internal class Transformer<K, E, R>(
 ) {
     fun run(): Observable<ChangeSet<K, R>> =
         _source.scan(ChangeAwareCache.empty<K, R>()) { state, changes ->
-            val cache = state ?: ChangeAwareCache(changes.size)
+                val cache =
+                    if (state == ChangeAwareCache.empty<K, R>())
+                        ChangeAwareCache(changes.size)
+                    else state
 
-            changes.forEach { change ->
-                val action = {
-                    val transformed = _factory(change.key, change.current, change.previous)
-                    cache.addOrUpdate(transformed, change.key)
-                }
+                changes.forEach { change ->
+                    val action = {
+                        val transformed = _factory(change.key, change.current, change.previous)
+                        cache.addOrUpdate(transformed, change.key)
+                    }
 
-                when (change.reason) {
-                    ChangeReason.Add, ChangeReason.Update -> {
-                        if (_exceptionCallback != ((Stub)::EMPTY_COMSUMER)) {
-                            try {
+                    when (change.reason) {
+                        ChangeReason.Add, ChangeReason.Update -> {
+                            if (_exceptionCallback != ((Stub)::EMPTY_COMSUMER)) {
+                                try {
+                                    action()
+                                } catch (ex: Exception) {
+                                    _exceptionCallback(Error(ex, change.key, change.current))
+                                }
+                            } else
                                 action()
-                            } catch (ex: Exception) {
-                                _exceptionCallback(Error(ex, change.key, change.current))
-                            }
-                        } else
-                            action()
+                        }
+
+                        ChangeReason.Remove ->
+                            cache.remove(change.key)
+
+                        ChangeReason.Refresh -> {
+                            if (_transformOnRefresh)
+                                action()
+                            else
+                                cache.refresh(change.key)
+                        }
+
+                        ChangeReason.Moved ->
+                            return@forEach
                     }
-
-                    ChangeReason.Remove ->
-                        cache.remove(change.key)
-
-                    ChangeReason.Refresh -> {
-                        if (_transformOnRefresh)
-                            action()
-                        else
-                            cache.refresh(change.key)
-                    }
-
-                    ChangeReason.Moved ->
-                        return@forEach
                 }
-            }
 
-            return@scan cache
-        }
+                return@scan cache
+            }
             .skip(1)
             .filter { it != ChangeAwareCache.empty<K, R>() }
             .map { it.captureChanges() }

@@ -34,16 +34,14 @@ internal class CacheUpdater<K, V>(
     override fun refresh(keys: Iterable<K>) =
         keys.forEach { refresh(it) }
 
-    override fun refresh(key: K) {
-        TODO("Not yet implemented")
-    }
+    override fun refresh(key: K) =
+        _cache.refresh(key)
 
     override fun removeItem(items: Iterable<V>) =
         items.forEach { removeItem(it) }
 
-    override fun remove(keys: Iterable<K>) {
-        TODO("Not yet implemented")
-    }
+    override fun remove(keys: Iterable<K>) =
+        _cache.remove(keys)
 
     override fun removeItem(item: V) =
         _cache.remove(_keySelector(item))

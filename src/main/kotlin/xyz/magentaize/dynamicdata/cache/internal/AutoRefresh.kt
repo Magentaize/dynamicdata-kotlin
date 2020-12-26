@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import xyz.magentaize.dynamicdata.cache.*
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 import xyz.magentaize.dynamicdata.kernel.buffer
 import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import kotlin.time.Duration
@@ -16,13 +17,14 @@ internal class AutoRefresh<K, V, T>(
     private val _scheduler: Scheduler = Schedulers.computation()
 ) {
     fun run(): Observable<ChangeSet<K, V>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val shared = _source.publish()
 
             // monitor each item observable and create change
             val changes = shared
                 .mergeMany { k, v ->
-                    _evaluator(k, v).map { Change(ChangeReason.Refresh, k, v) }
+                    _evaluator(k, v)
+                        .map { Change(ChangeReason.Refresh, k, v) }
                 }
 
             // create a change set, either buffered or one item at the time
@@ -38,11 +40,9 @@ internal class AutoRefresh<K, V, T>(
                 .mergeWith(refreshChanges)
                 .subscribeBy(emitter)
 
-            emitter.setDisposable(
-                CompositeDisposable(
-                    publisher,
-                    shared.connect()
-                )
+            return@create CompositeDisposable(
+                publisher,
+                shared.connect()
             )
         }
 }

@@ -4,6 +4,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.internal.functions.Functions
 import xyz.magentaize.dynamicdata.cache.ChangeSet
 import xyz.magentaize.dynamicdata.cache.subscribeMany
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 
 internal class MergeMany<K, V, R>(
     val _source: Observable<ChangeSet<K, V>>,
@@ -13,8 +14,9 @@ internal class MergeMany<K, V, R>(
             this(source, { _, t -> selector(t) })
 
     fun run(): Observable<R> =
-        Observable.create { emitter ->
-            _source.subscribeMany { k, v ->
+        ObservableEx.create { emitter ->
+            return@create _source
+                .subscribeMany { k, v ->
                 _selector(k, v).subscribe(emitter::onNext, Functions.emptyConsumer(), Functions.EMPTY_ACTION)
             }
                 .subscribe(Functions.emptyConsumer(), emitter::onError)

@@ -3,9 +3,7 @@ package xyz.magentaize.dynamicdata.cache.internal
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import xyz.magentaize.dynamicdata.cache.*
-import xyz.magentaize.dynamicdata.kernel.Error
-import xyz.magentaize.dynamicdata.kernel.Optional
-import xyz.magentaize.dynamicdata.kernel.Stub
+import xyz.magentaize.dynamicdata.kernel.*
 import xyz.magentaize.dynamicdata.kernel.subscribeBy
 
 internal class TransformerWithForcedTransform<K, E, R>(
@@ -15,7 +13,7 @@ internal class TransformerWithForcedTransform<K, E, R>(
     private val _exceptionCallback: (Error<K, E>) -> Unit = Stub.EMPTY_COMSUMER,
 ) {
     fun run(): Observable<ChangeSet<K, R>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val shared = _source.publish()
 
             // capture all items so we can apply a forced transform
@@ -32,12 +30,10 @@ internal class TransformerWithForcedTransform<K, E, R>(
 
             val transform = Transformer(sourceAndRefreshes, _factory, _exceptionCallback, true).run()
 
-            emitter.setDisposable(
-                CompositeDisposable(
-                    cacheLoader,
-                    transform.subscribeBy(emitter),
-                    shared.connect()
-                )
+            return@create CompositeDisposable(
+                cacheLoader,
+                transform.subscribeBy(emitter),
+                shared.connect()
             )
         }
 

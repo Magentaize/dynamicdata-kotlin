@@ -24,14 +24,14 @@ fun <T> Observable<T>.monitorStatus(): Observable<ConnectionStatus> =
     StatusMonitor(this).run()
 
 @ExperimentalTime
-fun <K, V: NotifyPropertyChanged, T> Observable<ChangeSet<K, V>>.autoRefresh(
+fun <K, V : NotifyPropertyChanged, T> Observable<ChangeSet<K, V>>.autoRefresh(
     accessor: KProperty1<V, T>,
-    changeSetBuffer: Duration= Duration.ZERO,
+    changeSetBuffer: Duration = Duration.ZERO,
     propertyChangeThrottle: Duration = Duration.ZERO,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<K, V>> =
     autoRefreshOnObservable({ _, t ->
-        if(propertyChangeThrottle == Duration.ZERO)
+        if (propertyChangeThrottle == Duration.ZERO)
             t.whenPropertyChanged(accessor, false)
         else
             t.whenPropertyChanged(accessor, false).throttleWithTimeout(propertyChangeThrottle, scheduler)
@@ -40,7 +40,7 @@ fun <K, V: NotifyPropertyChanged, T> Observable<ChangeSet<K, V>>.autoRefresh(
 @ExperimentalTime
 fun <K, V, T> Observable<ChangeSet<K, V>>.autoRefreshOnObservable(
     evaluator: (V) -> Observable<T>,
-    changeSetBuffer: Duration= Duration.ZERO,
+    changeSetBuffer: Duration = Duration.ZERO,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<K, V>> =
     autoRefreshOnObservable({ _, t -> evaluator(t) }, changeSetBuffer, scheduler)
@@ -48,7 +48,7 @@ fun <K, V, T> Observable<ChangeSet<K, V>>.autoRefreshOnObservable(
 @ExperimentalTime
 fun <K, V, T> Observable<ChangeSet<K, V>>.autoRefreshOnObservable(
     evaluator: (K, V) -> Observable<T>,
-    duration: Duration= Duration.ZERO,
+    duration: Duration = Duration.ZERO,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<K, V>> =
     AutoRefresh(this, evaluator, duration, scheduler).run()
@@ -139,15 +139,17 @@ fun <K, V, C : ChangeSet<K, V>> Observable<C>.notEmpty(): Observable<C> =
 
 fun <K, E, R> Observable<ChangeSet<K, E>>.transform(
     factory: (K, E) -> R,
-    forceTransform: Observable<(K, E) -> Boolean>? = null
+    @Suppress("ReactiveStreamsUnusedPublisher")
+    forceTransform: Observable<(K, E) -> Boolean> = Observable.never()
 ): Observable<ChangeSet<K, R>> =
     transform({ key, current, _ -> factory(key, current) }, forceTransform)
 
 fun <K, E, R> Observable<ChangeSet<K, E>>.transform(
     factory: (K, E, Optional<E>) -> R,
-    forceTransform: Observable<(K, E) -> Boolean>? = null
+    @Suppress("ReactiveStreamsUnusedPublisher")
+    forceTransform: Observable<(K, E) -> Boolean> = Observable.never()
 ): Observable<ChangeSet<K, R>> =
-    if (forceTransform != null)
+    if (forceTransform != Observable.never<(K, E) -> Boolean>())
         TransformerWithForcedTransform(this, factory, forceTransform).run()
     else
         Transformer(this, factory).run()

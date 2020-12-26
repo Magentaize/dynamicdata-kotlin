@@ -1,12 +1,10 @@
 package xyz.magentaize.dynamicdata.list.internal
 
-import xyz.magentaize.dynamicdata.kernel.Optional
-import xyz.magentaize.dynamicdata.kernel.convertOr
-import xyz.magentaize.dynamicdata.kernel.subscribeBy
-import xyz.magentaize.dynamicdata.kernel.valueOrThrow
 import xyz.magentaize.dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.internal.functions.Functions
+import xyz.magentaize.dynamicdata.kernel.*
+import xyz.magentaize.dynamicdata.kernel.subscribeBy
 
 internal class Filter<T>(
     private val _source: Observable<ChangeSet<T>>,
@@ -32,7 +30,7 @@ internal class Filter<T>(
     }
 
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             var predicate = { _: T -> false }
             val all = mutableListOf<ItemWithMatch<T>>()
             val filtered = ChangeAwareList<ItemWithMatch<T>>()
@@ -72,12 +70,10 @@ internal class Filter<T>(
                     return@map process(filtered, changes)
                 }
 
-            val d = predicateChanged.mergeWith(filteredResult)
+            return@create predicateChanged.mergeWith(filteredResult)
                 .notEmpty()
                 .map { it.transform { iwm -> iwm.item } }
                 .subscribeBy(emitter)
-
-            emitter.setDisposable(d)
         }
 
     private fun requery(

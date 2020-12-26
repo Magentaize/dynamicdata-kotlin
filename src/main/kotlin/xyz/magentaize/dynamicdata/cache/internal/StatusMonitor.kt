@@ -5,12 +5,13 @@ import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 
 internal class StatusMonitor<T>(
     private val _source: Observable<T>
 ) {
     fun run(): Observable<ConnectionStatus> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val statusSubject = PublishSubject.create<ConnectionStatus>()
             var status = ConnectionStatus.Pending
 
@@ -41,12 +42,10 @@ internal class StatusMonitor<T>(
                 .distinctUntilChanged()
                 .subscribeBy(emitter)
 
-            val dispose = Disposable.fromAction {
+            return@create Disposable.fromAction {
                 statusSubject.onComplete()
                 monitor.dispose()
                 subscription.dispose()
             }
-
-            emitter.setDisposable(dispose)
         }
 }

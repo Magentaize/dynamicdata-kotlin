@@ -13,7 +13,7 @@ internal class GroupOnMutable<T, K>(
     private val _regroup: Observable<Unit>
 ) {
     fun run(): Observable<ChangeSet<MutableGroup<T, K>>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val groupings = ChangeAwareList<MutableGroup<T, K>>()
             val groupCache = mutableMapOf<K, AnonymousMutableGroup<T, K>>()
 
@@ -36,12 +36,10 @@ internal class GroupOnMutable<T, K>(
                 .notEmpty()
                 .subscribeBy(emitter)
 
-            val d = CompositeDisposable(
+            return@create CompositeDisposable(
                 publisher,
                 shared.connect()
             )
-
-            emitter.setDisposable(d)
         }
 
     private fun process(

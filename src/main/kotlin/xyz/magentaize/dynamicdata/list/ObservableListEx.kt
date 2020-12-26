@@ -172,8 +172,8 @@ fun <T> ObservableList<Observable<ChangeSet<T>>>.xor(): Observable<ChangeSet<T>>
 private fun <T> ObservableList<Observable<ChangeSet<T>>>.combine(type: CombineOperator): Observable<ChangeSet<T>> =
     DynamicCombiner(this, type).run()
 
-fun <T> Observable<ChangeSet<T>>.subscribeMany(subscriptionFactory: (T) -> Disposable): Observable<ChangeSet<T>> =
-    SubscribeMany(this, subscriptionFactory).run()
+fun <T> Observable<ChangeSet<T>>.subscribeMany(factory: (T) -> Disposable): Observable<ChangeSet<T>> =
+    SubscribeMany(this, factory).run()
 
 fun <T, R> Observable<ChangeSet<T>>.mergeMany(selector: (T) -> Observable<R>): Observable<R> =
     MergeMany(this, selector).run()

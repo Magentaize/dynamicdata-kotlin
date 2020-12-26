@@ -5,13 +5,12 @@ import xyz.magentaize.dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.Disposable
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 internal class ExpireAfter<T>(
     private val _source: EditableObservableList<T>,
     private val _expireAfter: (T) -> Duration?,
@@ -19,7 +18,7 @@ internal class ExpireAfter<T>(
     private val _scheduler: Scheduler
 ) {
     fun run(): Observable<Iterable<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             var dateTime = Instant.ofEpochMilli(_scheduler.now(TimeUnit.MILLISECONDS))
             val orderItemWasAdded = AtomicLong(-1)
             val autoRemover = _source.connect()
@@ -62,9 +61,9 @@ internal class ExpireAfter<T>(
                         }
                         .subscribe()
 
-            emitter.setDisposable(Disposable.fromAction {
+            return@create Disposable.fromAction {
                 removalSubscription.dispose()
                 autoRemover.dispose()
-            })
+            }
         }
 }

@@ -6,6 +6,7 @@ import io.reactivex.rxjava3.disposables.Disposable
 import xyz.magentaize.dynamicdata.cache.ChangeSet
 import xyz.magentaize.dynamicdata.cache.disposeMany
 import xyz.magentaize.dynamicdata.cache.transform
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 import xyz.magentaize.dynamicdata.kernel.subscribeBy
 
 internal class SubscribeMany<K, V>(
@@ -16,18 +17,17 @@ internal class SubscribeMany<K, V>(
             this(source, { _, v -> factory(v) })
 
     fun run(): Observable<ChangeSet<K, V>> =
-        Observable.create { emitter ->
-            val published = _source.publish()
-            val sub = published.transform(_factory)
+        ObservableEx.create { emitter ->
+            val shared = _source.publish()
+            val sub = shared
+                .transform(_factory)
                 .disposeMany()
                 .subscribe()
 
-            emitter.setDisposable(
-                CompositeDisposable(
-                    sub,
-                    published.subscribeBy(emitter),
-                    published.connect()
-                )
+            return@create CompositeDisposable(
+                sub,
+                shared.subscribeBy(emitter),
+                shared.connect()
             )
         }
 }

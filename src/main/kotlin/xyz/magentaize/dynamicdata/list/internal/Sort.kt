@@ -5,6 +5,7 @@ import xyz.magentaize.dynamicdata.kernel.valueOrThrow
 import xyz.magentaize.dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.internal.functions.Functions
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 
 internal class Sort<T>(
     private val _source: Observable<ChangeSet<T>>,
@@ -16,7 +17,7 @@ internal class Sort<T>(
 ) {
 
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val original = mutableListOf<T>()
             val target = ChangeAwareList<T>()
             val changed = _source.serialize()
@@ -34,12 +35,10 @@ internal class Sort<T>(
             val changeComparer = _comparatorChanged.serialize()
                 .map { changeComparer(target, it) }
 
-            val d = changed.mergeWith(resort)
+            return@create changed.mergeWith(resort)
                 .mergeWith(changeComparer)
                 .filter { change -> change.size != 0 }
                 .subscribeBy(emitter)
-
-            emitter.setDisposable(d)
         }
 
     private fun changeComparer(target: ChangeAwareList<T>, comparator: Comparator<T>): ChangeSet<T> {

@@ -1,10 +1,11 @@
 package xyz.magentaize.dynamicdata.cache.internal
 
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable
 import xyz.magentaize.dynamicdata.cache.ChangeReason
 import xyz.magentaize.dynamicdata.cache.ChangeSet
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
+import xyz.magentaize.dynamicdata.kernel.doOnEach
 import xyz.magentaize.dynamicdata.kernel.ifHasValue
 import xyz.magentaize.dynamicdata.kernel.subscribeBy
 
@@ -13,31 +14,17 @@ internal class DisposeMany<K, V>(
     private val _removeAction: (V) -> Unit
 ) {
     fun run(): Observable<ChangeSet<K, V>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val cache = Cache<K, V>()
             val subscriber = _source
-                .doOnEach(object : Observer<ChangeSet<K, V>> {
-                    override fun onNext(it: ChangeSet<K, V>) {
-                        registerForRemoval(it, cache)
-                    }
-
-                    override fun onError(e: Throwable?) {
-                        emitter.onError(e)
-                    }
-
-                    override fun onSubscribe(d: Disposable?) {
-                    }
-
-                    override fun onComplete() {
-                    }
-                })
+                .doOnEach({ registerForRemoval(it, cache) }, { e -> emitter.onError(e) })
                 .subscribeBy(emitter)
 
-            emitter.setDisposable(Disposable.fromAction {
+            return@create Disposable.fromAction {
                 subscriber.dispose()
                 cache.items.forEach(_removeAction)
                 cache.clear()
-            })
+            }
         }
 
     private fun registerForRemoval(changes: ChangeSet<K, V>, cache: Cache<K, V>) =

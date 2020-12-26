@@ -8,12 +8,13 @@ import xyz.magentaize.dynamicdata.list.populateInto
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.internal.functions.Functions
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 
 internal class Switch<T>(
     private var _source: Observable<Observable<ChangeSet<T>>>
 ) {
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val dest = SourceList<T>()
 
             val populator = _source
@@ -23,8 +24,6 @@ internal class Switch<T>(
 
             val publisher = dest.connect().subscribeBy(emitter)
 
-            val d = CompositeDisposable(dest, populator, publisher)
-
-            emitter.setDisposable(d)
+            return@create CompositeDisposable(dest, populator, publisher)
         }
 }

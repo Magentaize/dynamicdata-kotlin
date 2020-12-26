@@ -20,7 +20,7 @@ internal class BufferIf<T>(
     private val _scheduler: Scheduler = Schedulers.computation()
 ) {
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             var paused = _initialPauseState
             var buffer = AnonymousChangeSet<T>()
             val timeoutSubscriber = SerialDisposable()
@@ -73,7 +73,7 @@ internal class BufferIf<T>(
 
             val connected = bufferSelector.connect()
 
-            val dispose = Disposable.fromAction {
+            return@create Disposable.fromAction {
                 connected.dispose()
                 pause.dispose()
                 resume.dispose()
@@ -81,7 +81,5 @@ internal class BufferIf<T>(
                 timeoutSubject.onComplete()
                 timeoutSubscriber.dispose()
             }
-
-            emitter.setDisposable(dispose)
         }
 }

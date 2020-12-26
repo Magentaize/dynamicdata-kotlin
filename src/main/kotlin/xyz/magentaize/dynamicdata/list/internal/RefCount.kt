@@ -6,6 +6,7 @@ import xyz.magentaize.dynamicdata.list.ObservableList
 import xyz.magentaize.dynamicdata.list.asObservableList
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 
 internal class RefCount<T>(
     private val _source: Observable<ChangeSet<T>>
@@ -15,7 +16,7 @@ internal class RefCount<T>(
     private var _list: ObservableList<T> = ObservableList.empty()
 
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             synchronized(_lock) {
                 if (++_refCount == 1)
                     _list = _source.asObservableList()
@@ -23,7 +24,7 @@ internal class RefCount<T>(
 
             val subscriber = _list.connect().subscribeBy(emitter)
 
-            val d = Disposable.fromAction {
+            return@create Disposable.fromAction {
                 subscriber.dispose()
                 synchronized(_lock) {
                     if (--_refCount == 0) {
@@ -31,7 +32,5 @@ internal class RefCount<T>(
                     }
                 }
             }
-
-            emitter.setDisposable(d)
         }
 }

@@ -9,25 +9,24 @@ import xyz.magentaize.dynamicdata.list.clone
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.internal.functions.Functions
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 
 internal class OnBeingRemoved<T>(
     private val _source: Observable<ChangeSet<T>>,
     private val _callback: (T) -> Unit
 ) {
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create { emitter ->
+        ObservableEx.create { emitter ->
             val items = mutableListOf<T>()
             val subscription = _source
                 .serialize()
                 .doOnEach({ registerForRemoval(items, it) }, { e -> emitter.onError(e) })
                 .subscribeBy(emitter)
 
-            val d = Disposable.fromAction {
+            return@create Disposable.fromAction {
                 subscription.dispose()
                 items.forEach(_callback)
             }
-
-            emitter.setDisposable(d)
         }
 
     private fun registerForRemoval(items: MutableList<T>, changes: ChangeSet<T>) {

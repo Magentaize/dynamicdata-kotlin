@@ -14,11 +14,6 @@ class AutoRefreshFixture {
 
         cache.addOrUpdate(items)
 
-        val remove = items[1]
-        cache.removeItem(remove)
-        remove.age = 100
-        result.messages.size shouldBeEqualTo 2
-
         result.data.size shouldBeEqualTo 100
         result.messages.size shouldBeEqualTo 1
 
@@ -27,12 +22,12 @@ class AutoRefreshFixture {
         result.messages.size shouldBeEqualTo 2
         result.messages[1].first().reason shouldBe ChangeReason.Refresh
 
-//        val remove = items[1]
-//        cache.removeItem(remove)
-//        result.data.size shouldBeEqualTo 99
-//        result.messages.size shouldBeEqualTo 3
-//        remove.age = 100
-//        result.messages.size shouldBeEqualTo 3
+        val remove = items[1]
+        cache.removeItem(remove)
+        result.data.size shouldBeEqualTo 99
+        result.messages.size shouldBeEqualTo 3
+        remove.age = 100
+        result.messages.size shouldBeEqualTo 3
 
         cache.addOrUpdate(remove)
         result.messages.size shouldBeEqualTo 4

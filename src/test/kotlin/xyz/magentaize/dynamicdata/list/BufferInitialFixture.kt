@@ -6,6 +6,7 @@ import io.reactivex.rxjava3.schedulers.TestScheduler
 import org.amshove.kluent.shouldBeEqualTo
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
+import kotlin.time.seconds
 
 internal class BufferInitialFixture {
     private val people = (1..10_000).map { Person(it.toString(), it) }.toList()
@@ -15,7 +16,7 @@ internal class BufferInitialFixture {
         val scheduler = TestScheduler()
         val cache = SourceList<Person>()
         val aggregator = cache.connect()
-            .bufferInitial(1, TimeUnit.SECONDS, scheduler)
+            .bufferInitial(1.seconds, scheduler)
             .asAggregator()
         people.forEach { cache.add(it) }
 

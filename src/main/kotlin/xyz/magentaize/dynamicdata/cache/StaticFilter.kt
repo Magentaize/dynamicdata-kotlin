@@ -9,7 +9,11 @@ internal class StaticFilter<K, V>(
 ) {
     fun run(): Observable<ChangeSet<K, V>> =
         _source.scan(ChangeAwareCache.empty<K, V>()) { state, changes ->
-            val cache = state ?: ChangeAwareCache(changes.size)
+            val cache =
+                if (state == ChangeAwareCache.empty<K, V>())
+                    ChangeAwareCache(changes.size)
+                else state
+
             cache.filterChanges(changes, _filter)
 
             return@scan cache

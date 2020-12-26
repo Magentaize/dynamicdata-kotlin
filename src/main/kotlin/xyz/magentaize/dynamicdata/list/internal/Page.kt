@@ -5,6 +5,7 @@ import xyz.magentaize.dynamicdata.cache.PageRequest
 import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import xyz.magentaize.dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
 import java.lang.Integer.min
 
 internal class Page<T>(
@@ -13,7 +14,7 @@ internal class Page<T>(
 ) {
     @Suppress("UNCHECKED_CAST")
     fun run(): Observable<ChangeSet<T>> =
-        Observable.create<PageChangeSet<T>> { emitter ->
+        ObservableEx.create<PageChangeSet<T>> { emitter ->
             val all = mutableListOf<T>()
             val paged = ChangeAwareList<T>()
 
@@ -27,11 +28,9 @@ internal class Page<T>(
             val dataChanged = _source
                 .map { page(all, paged, parameters, it) }
 
-            val d = requestStream.mergeWith(dataChanged)
+            return@create requestStream.mergeWith(dataChanged)
                 .filter { it.size != 0 }
                 .subscribeBy(emitter)
-
-            emitter.setDisposable(d)
         } as Observable<ChangeSet<T>>
 
     private fun page(

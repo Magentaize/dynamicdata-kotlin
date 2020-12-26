@@ -49,15 +49,12 @@ internal class Cache<K, V>(private val _data: MutableMap<K, V>) : ICache<K, V> {
         _data.clear()
 
     override fun refresh() {
-        TODO("Not yet implemented")
     }
 
     override fun refresh(keys: Iterable<K>) {
-        TODO("Not yet implemented")
     }
 
     override fun refresh(key: K) {
-        TODO("Not yet implemented")
     }
 
     override fun lookup(key: K): Optional<V> =

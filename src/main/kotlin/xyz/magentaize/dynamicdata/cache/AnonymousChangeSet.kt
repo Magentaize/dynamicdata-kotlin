@@ -1,6 +1,7 @@
 package xyz.magentaize.dynamicdata.cache
 
 class AnonymousChangeSet<K, V> : ArrayList<Change<K, V>>, ChangeSet<K, V> {
+    @Suppress("UNCHECKED_CAST")
     companion object {
         private val INSTANCE: AnonymousChangeSet<Any?, Any?> = AnonymousChangeSet()
 

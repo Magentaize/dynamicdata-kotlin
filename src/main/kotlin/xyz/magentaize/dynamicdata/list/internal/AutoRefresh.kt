@@ -6,14 +6,15 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import xyz.magentaize.dynamicdata.kernel.buffer
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
 
 internal class AutoRefresh<T, R>(
     private val _source: Observable<ChangeSet<T>>,
     private val _evaluator: (T) -> Observable<R>,
-    private val _bufferTimeSpan: Long? = null,
-    private val _unit: TimeUnit? = null,
-    private val _scheduler: Scheduler? = null
+    private val _duration: Duration = Duration.ZERO,
+    private val _scheduler: Scheduler = Schedulers.computation()
 ) {
     fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
@@ -26,12 +27,11 @@ internal class AutoRefresh<T, R>(
             //monitor each item observable and create change
             val itemHasChanged = shared.mergeMany { t -> _evaluator(t).map { t } }
 
-            //create a changeset, either buffered or one item at the time
-            val itemsChanged = if (_bufferTimeSpan == null)
+            //create a change set, either buffered or one item at the time
+            val itemsChanged = if (_duration == Duration.ZERO)
                 itemHasChanged.map { listOf(it) }
             else {
-                require(_unit != null)
-                itemHasChanged.buffer(_bufferTimeSpan, _unit, _scheduler ?: Schedulers.computation())
+                itemHasChanged.buffer(_duration, _scheduler)
                     .filter { it.any() }
             }
 

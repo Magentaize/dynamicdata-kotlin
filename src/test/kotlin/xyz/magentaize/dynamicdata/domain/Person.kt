@@ -11,6 +11,14 @@ internal class Person(
     val gender: String = "F",
     val parentName: String = ""
 ) : NotifyPropertyChanged {
+    companion object {
+        fun age1Person(id: Int): Person =
+            Person("Person${id}", 1)
+
+        fun make100People(): List<Person> =
+            (1..100).map(this::age1Person)
+    }
+
     var age = age
         set(value) {
             field = value
@@ -25,7 +33,7 @@ internal class Person(
     override fun equals(other: Any?): Boolean {
         if (other !is Person)
             return false
-        if(this === other)
+        if (this === other)
             return true
         if (name == other.name && age == other.age && gender == other.gender)
             return true

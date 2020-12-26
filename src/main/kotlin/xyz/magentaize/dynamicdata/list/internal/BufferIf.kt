@@ -9,14 +9,14 @@ import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.disposables.SerialDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.PublishSubject
-import java.util.concurrent.TimeUnit
+import xyz.magentaize.dynamicdata.kernel.ObservableEx
+import kotlin.time.Duration
 
 internal class BufferIf<T>(
     private val _source: Observable<ChangeSet<T>>,
     private val _pauseIfTrueSelector: Observable<Boolean>,
     private val _initialPauseState: Boolean,
-    private val _timespan: Long = 0L,
-    private val _unit: TimeUnit = TimeUnit.NANOSECONDS,
+    private val _duration: Duration = Duration.ZERO,
     private val _scheduler: Scheduler = Schedulers.computation()
 ) {
     fun run(): Observable<ChangeSet<T>> =
@@ -38,9 +38,9 @@ internal class BufferIf<T>(
                     .subscribe {
                         paused = true
                         //add pause timeout if required
-                        if (_timespan != 0L) {
+                        if (_duration != Duration.ZERO) {
                             timeoutSubscriber.set(
-                                Observable.timer(_timespan, _unit, _scheduler)
+                                ObservableEx.timer(_duration, _scheduler)
                                     .map { false }
                                     .subscribeBy(timeoutSubject)
                             )

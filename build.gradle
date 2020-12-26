@@ -1,8 +1,9 @@
 buildscript {
     ext {
         package_version = "0.2.2"
-        kotlin_version = "1.4.0"
+        kotlin_version = "1.4.20"
         kluent_version = "1.61"
+        rxkotlin = "3.0.1"
     }
 }
 
@@ -26,7 +27,13 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "net.servicestack:client:1.0.43"
-    implementation "io.reactivex.rxjava3:rxkotlin:3.0.0"
+    implementation "io.reactivex.rxjava3:rxkotlin:$rxkotlin"
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
+    }
 }
 
 dependencies {

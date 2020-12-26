@@ -12,6 +12,7 @@ import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
+import kotlin.time.seconds
 
 internal class AutoRefreshFixture {
     @Test
@@ -54,7 +55,7 @@ internal class AutoRefreshFixture {
         val scheduler = TestScheduler()
         val items = (1..100).map { Person("Person$it", 1) }.toList()
         val list = SourceList<Person>()
-        val result = list.connect().autoRefresh(Person::age, 1, TimeUnit.SECONDS, scheduler = scheduler).asAggregator()
+        val result = list.connect().autoRefresh(Person::age, 1.seconds, scheduler = scheduler).asAggregator()
 
         list.addRange(items)
         result.data.size shouldBeEqualTo 100

@@ -1,11 +1,11 @@
 package xyz.magentaize.dynamicdata.list.internal
 
-import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import xyz.magentaize.dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong

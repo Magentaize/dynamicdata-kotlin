@@ -1,22 +1,57 @@
 package xyz.magentaize.dynamicdata.cache
 
-import xyz.magentaize.dynamicdata.kernel.ConnectionStatus
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.schedulers.Schedulers
+import xyz.magentaize.dynamicdata.binding.whenPropertyChanged
 import xyz.magentaize.dynamicdata.cache.internal.*
 import xyz.magentaize.dynamicdata.cache.internal.Combiner
 import xyz.magentaize.dynamicdata.cache.internal.StatusMonitor
 import xyz.magentaize.dynamicdata.cache.internal.Transformer
 import xyz.magentaize.dynamicdata.cache.internal.TransformerWithForcedTransform
-import xyz.magentaize.dynamicdata.kernel.Optional
+import xyz.magentaize.dynamicdata.kernel.*
 import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import xyz.magentaize.dynamicdata.list.ObservableList
 import xyz.magentaize.dynamicdata.list.asObservableList
 import xyz.magentaize.dynamicdata.list.transform
+import kotlin.reflect.KProperty1
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 fun <T> Observable<T>.monitorStatus(): Observable<ConnectionStatus> =
     StatusMonitor(this).run()
+
+@ExperimentalTime
+fun <K, V: NotifyPropertyChanged, T> Observable<ChangeSet<K, V>>.autoRefresh(
+    accessor: KProperty1<V, T>,
+    changeSetBuffer: Duration= Duration.ZERO,
+    propertyChangeThrottle: Duration = Duration.ZERO,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<ChangeSet<K, V>> =
+    autoRefreshOnObservable({ _, t ->
+        if(propertyChangeThrottle == Duration.ZERO)
+            t.whenPropertyChanged(accessor, false)
+        else
+            t.whenPropertyChanged(accessor, false).throttleWithTimeout(propertyChangeThrottle, scheduler)
+    }, changeSetBuffer, scheduler)
+
+@ExperimentalTime
+fun <K, V, T> Observable<ChangeSet<K, V>>.autoRefreshOnObservable(
+    evaluator: (V) -> Observable<T>,
+    changeSetBuffer: Duration= Duration.ZERO,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<ChangeSet<K, V>> =
+    autoRefreshOnObservable({ _, t -> evaluator(t) }, changeSetBuffer, scheduler)
+
+@ExperimentalTime
+fun <K, V, T> Observable<ChangeSet<K, V>>.autoRefreshOnObservable(
+    evaluator: (K, V) -> Observable<T>,
+    duration: Duration= Duration.ZERO,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<ChangeSet<K, V>> =
+    AutoRefresh(this, evaluator, duration, scheduler).run()
 
 fun <K, V> Observable<ChangeSet<K, V>>.add(
     vararg others: Observable<ChangeSet<K, V>>
@@ -46,6 +81,12 @@ fun <K, V> Observable<ChangeSet<K, V>>.or(
 
 fun <K, V> SourceCache<K, V>.addOrUpdate(item: V) =
     this.edit { it.addOrUpdate(item) }
+
+fun <K, V> SourceCache<K, V>.addOrUpdate(items: Iterable<V>) =
+    this.edit { it.addOrUpdate(items) }
+
+fun <K, V> SourceCache<K, V>.removeItem(item: V) =
+    this.edit { it.removeItem(item) }
 
 fun <K, V> Iterable<Observable<ChangeSet<K, V>>>.or(): Observable<ChangeSet<K, V>> =
     combine(CombineOperator.Or)

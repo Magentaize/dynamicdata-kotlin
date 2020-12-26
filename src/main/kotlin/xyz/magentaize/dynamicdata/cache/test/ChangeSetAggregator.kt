@@ -14,7 +14,10 @@ class ChangeSetAggregator<K, V>(source: Observable<ChangeSet<K, V>>) : Disposabl
     private var _isDisposed = false
 
     val data: ObservableCache<K, V>
-    val messages = mutableListOf<ChangeSet<K, V>>()
+    val messages: List<ChangeSet<K, V>>
+        get() = _messages.toList()
+
+    val _messages = mutableListOf<ChangeSet<K, V>>()
     lateinit var error: Throwable
         private set
     var summary: ChangeSummary = ChangeSummary.empty()
@@ -24,10 +27,8 @@ class ChangeSetAggregator<K, V>(source: Observable<ChangeSet<K, V>>) : Disposabl
         val published = source.publish()
         data = published.asObservableCache()
         val results = published.subscribe({
-            messages.add(it)
-        },
-            { error = it }
-        )
+            _messages.add(it)
+        }, { error = it })
         val summariser = published
             .collectUpdateStats()
             .subscribe({ summary = it }, Functions.emptyConsumer())

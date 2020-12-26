@@ -11,7 +11,7 @@ interface ICacheUpdater<K, V> : IQuery<K, V> {
 
     /*Overload of remove due to ambiguous method when TObject and TKey are of the same type*/
     fun remove(keys: Iterable<K>)
-    fun removeItem(key: V)
+    fun removeItem(item: V)
     fun remove(key: K)
     fun removeKvp(items: Iterable<Pair<K, V>>)
     fun removePair(item: Pair<K, V>)

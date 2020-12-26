@@ -15,10 +15,11 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import xyz.magentaize.dynamicdata.kernel.buffer
+import xyz.magentaize.dynamicdata.kernel.throttleWithTimeout
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KProperty1
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
 fun <T> Observable<ChangeSet<T>>.asObservableList(): ObservableList<T> =
     AnonymousObservableList(this)
@@ -27,45 +28,40 @@ fun <T> Observable<ChangeSet<T>>.notEmpty(): Observable<ChangeSet<T>> =
     this.filter { it.size != 0 }
 
 fun <T : NotifyPropertyChanged> Observable<ChangeSet<T>>.autoRefresh(
-    bufferTimeSpan: Long? = null,
-    bufferTimeUnit: TimeUnit? = null,
-    propertyChangeThrottleTimeSpan: Long? = null,
-    propertyChangeThrottleTimeUnit: TimeUnit? = null,
+    duration: Duration = Duration.ZERO,
+    propertyChangeThrottle: Duration = Duration.ZERO,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<T>> =
     autoRefreshOnObservable({
-        if (propertyChangeThrottleTimeSpan == null)
+        if (propertyChangeThrottle == Duration.ZERO)
             it.whenPropertyChanged()
         else
             it
                 .whenPropertyChanged()
-                .throttleWithTimeout(propertyChangeThrottleTimeSpan, propertyChangeThrottleTimeUnit, scheduler)
-    }, bufferTimeSpan, bufferTimeUnit, scheduler)
+                .throttleWithTimeout(propertyChangeThrottle, scheduler)
+    }, duration, scheduler)
 
 fun <T : NotifyPropertyChanged, R> Observable<ChangeSet<T>>.autoRefresh(
     accessor: KProperty1<T, R>,
-    bufferTimeSpan: Long? = null,
-    bufferTimeUnit: TimeUnit? = null,
-    propertyChangeThrottleTimeSpan: Long? = null,
-    propertyChangeThrottleTimeUnit: TimeUnit? = null,
+    duration: Duration = Duration.ZERO,
+    propertyChangeThrottle: Duration = Duration.ZERO,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<T>> =
     autoRefreshOnObservable({
-        if (propertyChangeThrottleTimeSpan == null)
+        if (propertyChangeThrottle == Duration.ZERO)
             it.whenPropertyChanged(accessor, false)
         else
             it
                 .whenPropertyChanged(accessor, false)
-                .throttleWithTimeout(propertyChangeThrottleTimeSpan, propertyChangeThrottleTimeUnit, scheduler)
-    }, bufferTimeSpan, bufferTimeUnit, scheduler)
+                .throttleWithTimeout(propertyChangeThrottle, scheduler)
+    }, duration, scheduler)
 
 fun <T, R> Observable<ChangeSet<T>>.autoRefreshOnObservable(
     evaluator: (T) -> Observable<R>,
-    bufferTimeSpan: Long? = null,
-    unit: TimeUnit? = null,
-    scheduler: Scheduler? = null
+    duration: Duration = Duration.ZERO,
+    scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<T>> =
-    AutoRefresh(this, evaluator, bufferTimeSpan, unit, scheduler).run()
+    AutoRefresh(this, evaluator, duration, scheduler).run()
 
 fun <T, R> Observable<ChangeSet<T>>.transform(
     transformFactory: (T) -> R
@@ -202,13 +198,12 @@ fun <T> Observable<List<ChangeSet<T>>>.flattenBufferResult(): Observable<ChangeS
         .map { AnonymousChangeSet(it.flatten()) }
 
 fun <T> Observable<ChangeSet<T>>.bufferInitial(
-    timespan: Long,
-    unit: TimeUnit,
+    timespan: Duration,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<T>> =
     deferUntilLoaded()
         .publish { shared ->
-            val initial = shared.buffer(timespan, unit, scheduler)
+            val initial = shared.buffer(timespan, scheduler)
                 .flattenBufferResult()
                 .take(1)
 
@@ -226,24 +221,22 @@ fun <T> Observable<ChangeSet<T>>.bufferIf(
     initialPauseState: Boolean,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<T>> =
-    bufferIf(pauseIfTrueSelector, initialPauseState, 0L, TimeUnit.NANOSECONDS, scheduler)
+    bufferIf(pauseIfTrueSelector, initialPauseState, Duration.ZERO, scheduler)
 
 fun <T> Observable<ChangeSet<T>>.bufferIf(
     pauseIfTrueSelector: Observable<Boolean>,
-    timespan: Long,
-    unit: TimeUnit,
+    duration: Duration = Duration.ZERO,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<T>> =
-    bufferIf(pauseIfTrueSelector, false, timespan, unit, scheduler)
+    bufferIf(pauseIfTrueSelector, false, duration, scheduler)
 
 fun <T> Observable<ChangeSet<T>>.bufferIf(
     pauseIfTrueSelector: Observable<Boolean>,
     initialPauseState: Boolean,
-    timespan: Long = 0L,
-    unit: TimeUnit = TimeUnit.NANOSECONDS,
+    duration: Duration = Duration.ZERO,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<T>> =
-    BufferIf(this, pauseIfTrueSelector, initialPauseState, timespan, unit, scheduler).run()
+    BufferIf(this, pauseIfTrueSelector, initialPauseState, duration, scheduler).run()
 
 fun <T, R> Observable<ChangeSet<T>>.distinctValues(selector: (T) -> R): Observable<ChangeSet<R>> =
     Distinct(this, selector).run()
@@ -329,14 +322,12 @@ fun <T, K> Observable<ChangeSet<T>>.groupOn(
 ): Observable<ChangeSet<Group<T, K>>> =
     GroupOn(this, selector, regroup).run()
 
-@ExperimentalTime
 fun <T> EditableObservableList<T>.expireAfter(
     timeSelector: (T) -> Duration?,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<Iterable<T>> =
     expireAfter(timeSelector, null, scheduler)
 
-@ExperimentalTime
 fun <T> EditableObservableList<T>.expireAfter(
     timeSelector: (T) -> Duration?,
     pollingInterval: Duration? = null,
@@ -356,13 +347,11 @@ fun <T> Observable<ChangeSet<T>>.forEachItemChange(
 ): Observable<ChangeSet<T>> =
     doOnEach { it.value.flatten().forEach(action) }
 
-@ExperimentalTime
 fun <T> Observable<Iterable<T>>.toObservableChangeSet(
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<ChangeSet<T>> =
     toObservableChangeSet(null, -1, scheduler)
 
-@ExperimentalTime
 fun <T> Observable<Iterable<T>>.toObservableChangeSet(
     expireAfter: ((T) -> Duration?)?,
     limitSizeTo: Int,
@@ -412,7 +401,7 @@ fun <T> EditableObservableList<T>.limitSizeTo(
     limit: Int,
     scheduler: Scheduler = Schedulers.computation()
 ): Observable<Iterable<T>> =
-    require(limit > 0){"limit must be greater than zero."}.let {
+    require(limit > 0) { "limit must be greater than zero." }.let {
         LimitSizeTo(this, limit, scheduler)
             .run()
             .doOnEach { this.removeAll(it.value) }

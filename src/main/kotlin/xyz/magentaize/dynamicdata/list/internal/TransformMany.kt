@@ -4,15 +4,16 @@ import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import xyz.magentaize.dynamicdata.list.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import xyz.magentaize.dynamicdata.kernel.Stub
 
 internal class TransformMany<T, R>(
     private val _source: Observable<ChangeSet<T>>,
     private val _selector: (T) -> Iterable<R>,
-    private val _childChanges: ((T) -> Observable<ChangeSet<R>>)?
+    private val _childChanges: (T) -> Observable<ChangeSet<R>> = Stub.emptyMapper()
 ) {
 
     fun run(): Observable<ChangeSet<R>> {
-        if (_childChanges != null)
+        if (_childChanges != Stub.emptyMapper<T, Observable<ChangeSet<R>>>())
             createWithChangeset()
 
         return Observable.create { emitter ->
@@ -37,7 +38,7 @@ internal class TransformMany<T, R>(
 
             val transformed = _source.transform {
                 val list = _selector(it)
-                val changes = _childChanges!!.invoke(it).skip(1)
+                val changes = _childChanges.invoke(it).skip(1)
                 return@transform ManyContainer(list, changes)
             }.publish()
 

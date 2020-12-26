@@ -26,7 +26,7 @@ open class ChangeAwareList<T>(items: Iterable<T> = emptyList()) : ExtendedList<T
         var retValue: AnonymousChangeSet<T>
         synchronized(lock) {
             if (_changes.count() == 0)
-                return AnonymousChangeSet.empty()
+                return ChangeSet.empty()
 
             retValue = _changes
             val totalChanges = retValue.totalChanges

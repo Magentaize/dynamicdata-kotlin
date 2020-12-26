@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import xyz.magentaize.dynamicdata.cache.internal.ReaderWriter
 import xyz.magentaize.dynamicdata.kernel.Optional
+import xyz.magentaize.dynamicdata.kernel.Stub
 import xyz.magentaize.dynamicdata.kernel.subscribeBy
 
 internal class AnonymousObservableCache<K, V> private constructor() :
@@ -18,15 +19,19 @@ internal class AnonymousObservableCache<K, V> private constructor() :
     private var _editLevel = 0
     private var _isDisposed = false
 
-    constructor(_source: Observable<ChangeSet<K, V>>) {
+    constructor(_source: Observable<ChangeSet<K, V>>) : this() {
         _readerWriter = ReaderWriter()
 
         val loader = _source.doFinally {
             _changes.onComplete()
             _changesPreview.onComplete()
         }.subscribe({ changeSet ->
-            val previewHandler = if (_changesPreview.hasObservers()) this::invokePreview else null
-            val changes = _readerWriter.write(changeSet, previewHandler, _changes.hasObservers())
+            val previewHandler =
+                if (_changesPreview.hasObservers())
+                    this::invokePreview
+                else
+                    Stub.EMPTY_COMSUMER
+            val changes = _readerWriter.write(_changes.hasObservers(), changeSet, previewHandler)
             invokeNext(changes)
         }, { ex ->
             _changesPreview.onError(ex)
@@ -44,7 +49,7 @@ internal class AnonymousObservableCache<K, V> private constructor() :
         }
     }
 
-    constructor(keySelector: ((V) -> K)?) {
+    constructor(keySelector: (V) -> K = Stub.emptyMapper()) : this() {
         _readerWriter = ReaderWriter(keySelector)
 
         _cleanUp = Disposable.fromAction {
@@ -57,21 +62,22 @@ internal class AnonymousObservableCache<K, V> private constructor() :
         }
     }
 
-    override fun connect(predicate: ((V) -> Boolean)?): Observable<ChangeSet<K, V>> =
+    override fun connect(predicate: (V) -> Boolean): Observable<ChangeSet<K, V>> =
         Observable.create { emitter ->
             synchronized(_lock) {
                 val initial = getInitialUpdates(predicate)
                 if (initial.size != 0)
                     emitter.onNext(initial)
 
-                val updateSource = (if (predicate == null) _changes else _changes.filter(predicate)).notEmpty()
+                val updateSource = (if (predicate == Stub.emptyFilter<V>()) _changes else _changes.filter(predicate))
+                    .notEmpty()
 
                 emitter.setDisposable(updateSource.subscribeBy(emitter))
             }
         }
 
-    override fun preview(predicate: ((V) -> Boolean)?): Observable<ChangeSet<K, V>> {
-        return if (predicate == null)
+    override fun preview(predicate: (V) -> Boolean): Observable<ChangeSet<K, V>> {
+        return if (predicate == Stub.emptyFilter<V>())
             _changesPreview
         else
             _changesPreview.filter(predicate)
@@ -122,7 +128,7 @@ internal class AnonymousObservableCache<K, V> private constructor() :
     override val keys: Iterable<K>
         get() = _readerWriter.keys
 
-    override val keyValues: Iterable<Map.Entry<K, V>>
+    override val keyValues: Map<K, V>
         get() = _readerWriter.keyValues
 
     internal fun updateFromSource(updateAction: (ISourceUpdater<K, V>) -> Unit) =
@@ -131,8 +137,12 @@ internal class AnonymousObservableCache<K, V> private constructor() :
 
             _editLevel++;
             if (_editLevel == 1) {
-                val previewHandler = if (_changesPreview.hasObservers()) this::invokePreview else null
-                changes = _readerWriter.write(updateAction, previewHandler, _changes.hasObservers())
+                val previewHandler =
+                    if (_changesPreview.hasObservers())
+                        this::invokePreview
+                    else
+                        Stub.EMPTY_COMSUMER
+                changes = _readerWriter.write(_changes.hasObservers(), updateAction, previewHandler)
             } else
                 _readerWriter.writeNested(updateAction)
 
@@ -143,7 +153,7 @@ internal class AnonymousObservableCache<K, V> private constructor() :
             }
         }
 
-    private fun getInitialUpdates(filter: ((V) -> Boolean)?) =
+    private fun getInitialUpdates(filter: (V) -> Boolean) =
         _readerWriter.getInitialUpdates(filter)
 
     private fun invokeNext(changes: ChangeSet<K, V>) =

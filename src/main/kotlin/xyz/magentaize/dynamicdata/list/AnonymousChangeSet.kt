@@ -1,14 +1,6 @@
 package xyz.magentaize.dynamicdata.list
 
 class AnonymousChangeSet<T>(items: Collection<Change<T>> = emptyList()) : ArrayList<Change<T>>(items), ChangeSet<T> {
-    companion object {
-        private val INSTANCE = AnonymousChangeSet<Any>()
-
-        @Suppress("UNCHECKED_CAST")
-        fun <T> empty(): ChangeSet<T> {
-            return INSTANCE as ChangeSet<T>
-        }
-    }
 
     override val size: Int
         get() = super.size

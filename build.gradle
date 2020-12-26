@@ -1,5 +1,6 @@
 buildscript {
     ext {
+        package_version = "0.2.2"
         kotlin_version = "1.4.0"
         kluent_version = "1.61"
     }
@@ -14,7 +15,7 @@ plugins {
 apply from: 'bintray.gradle'
 
 group packageGroup
-version '0.2.0'
+version package_version
 
 repositories {
     mavenCentral()
@@ -58,7 +59,7 @@ bintray {
         licenses = ['MIT']
         vcsUrl = 'https://github.com/Magentaize/dynamic-data-kotlin.git'
         version {
-            name = "0.2.0"
+            name = package_version
             released = new Date()
         }
     }
@@ -70,7 +71,7 @@ publishing {
             from components.java
             groupId packageGroup
             artifactId packageName
-            version '0.2.0'
+            version package_version
         }
     }
 }

@@ -86,7 +86,7 @@ internal class Filter<T>(
         filtered: ChangeAwareList<ItemWithMatch<T>>
     ): ChangeSet<ItemWithMatch<T>> {
         if (all.size == 0)
-            return AnonymousChangeSet.empty()
+            return ChangeSet.empty()
 
         if (_policy == ListFilterPolicy.ClearAndReplace) {
             val itemsWithMatch = all.map { ItemWithMatch(it.item, predicate(it.item), it.isMatch) }

@@ -1,58 +1,52 @@
 package xyz.magentaize.dynamicdata.cache.internal
 
 import xyz.magentaize.dynamicdata.cache.ChangeReason
-import xyz.magentaize.dynamicdata.cache.AnonymousChangeSet
 import xyz.magentaize.dynamicdata.cache.ChangeSet
 import xyz.magentaize.dynamicdata.cache.ICache
 import xyz.magentaize.dynamicdata.kernel.Optional
 import xyz.magentaize.dynamicdata.kernel.lookup
 
-internal class Cache<K, V> : ICache<K, V> {
-    private val data: MutableMap<K, V>
+internal class Cache<K, V>(private val _data: MutableMap<K, V>) : ICache<K, V> {
 
-    constructor(capacity: Int = -1) {
-        data = if (capacity > 1) LinkedHashMap(capacity) else LinkedHashMap()
-    }
-
-    constructor(data: Map<K, V>) {
-        this.data = data.toMutableMap()
-    }
+    constructor(capacity: Int = -1) : this(
+        if (capacity > 1) LinkedHashMap(capacity) else LinkedHashMap()
+    )
 
     val size: Int
-        get() = data.size
+        get() = _data.size
 
     override val keyValues: Map<K, V>
-        get() = data
+        get() = _data
 
     override val items: Iterable<V>
-        get() = data.values
+        get() = _data.values
 
     override val keys: Iterable<K>
-        get() = data.keys
+        get() = _data.keys
 
     override fun clone(changes: ChangeSet<K, V>) =
         changes.forEach {
             when (it.reason) {
-                ChangeReason.Add, ChangeReason.Update -> data[it.key] = it.current
-                ChangeReason.Remove -> data.remove(it.key)
+                ChangeReason.Add, ChangeReason.Update -> _data[it.key] = it.current
+                ChangeReason.Remove -> _data.remove(it.key)
                 else -> {
                 }
             }
         }
 
     override fun addOrUpdate(item: V, key: K) {
-        data[key] = item
+        _data[key] = item
     }
 
     override fun remove(key: K) {
-        data.remove(key)
+        _data.remove(key)
     }
 
     override fun remove(keys: Iterable<K>) =
-        keys.forEach{remove(it)}
+        keys.forEach { remove(it) }
 
     override fun clear() =
-        data.clear()
+        _data.clear()
 
     override fun refresh() {
         TODO("Not yet implemented")
@@ -67,5 +61,5 @@ internal class Cache<K, V> : ICache<K, V> {
     }
 
     override fun lookup(key: K): Optional<V> =
-        data.lookup(key)
+        _data.lookup(key)
 }

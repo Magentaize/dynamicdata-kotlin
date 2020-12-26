@@ -384,7 +384,7 @@ fun <T> Observable<ChangeSet<T>>.page(
 fun <T, R> Observable<ChangeSet<T>>.transformMany(
     selector: (T) -> Iterable<R>
 ): Observable<ChangeSet<R>> =
-    TransformMany(this, selector, null).run()
+    TransformMany(this, selector).run()
 
 fun <T> Observable<out ObservableList<T>>.switch(): Observable<ChangeSet<T>> =
     map { it.connect() }.switchObservable()

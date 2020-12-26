@@ -9,10 +9,10 @@ class SourceCache<K, V>(
     private val _innerCache: AnonymousObservableCache<K, V> = AnonymousObservableCache(keySelector)
     private var _isDisposed = false
 
-    override fun connect(predicate: ((V) -> Boolean)?): Observable<ChangeSet<K, V>> =
+    override fun connect(predicate: (V) -> Boolean): Observable<ChangeSet<K, V>> =
         _innerCache.connect(predicate)
 
-    override fun preview(predicate: ((V) -> Boolean)?): Observable<ChangeSet<K, V>> =
+    override fun preview(predicate: (V) -> Boolean): Observable<ChangeSet<K, V>> =
         _innerCache.preview(predicate)
 
     override fun watch(key: K): Observable<Change<K, V>> =
@@ -44,6 +44,6 @@ class SourceCache<K, V>(
     override val keys: Iterable<K>
         get() = _innerCache.keys
 
-    override val keyValues: Iterable<Map.Entry<K, V>>
+    override val keyValues: Map<K, V>
         get() = _innerCache.keyValues
 }

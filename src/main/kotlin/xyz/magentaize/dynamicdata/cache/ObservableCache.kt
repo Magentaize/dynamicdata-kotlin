@@ -7,6 +7,6 @@ interface ObservableCache<K, V> : ConnectableCache<K, V>, Disposable {
     val size: Int
     val items: Iterable<V>
     val keys: Iterable<K>
-    val keyValues: Iterable<Map.Entry<K, V>>
+    val keyValues: Map<K, V>
     fun lookup(key: K): Optional<V>
 }

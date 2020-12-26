@@ -1,13 +1,14 @@
 package xyz.magentaize.dynamicdata.cache.internal
 
 import xyz.magentaize.dynamicdata.cache.*
+import xyz.magentaize.dynamicdata.kernel.Stub
 
 internal class CacheUpdater<K, V>(
-    private val cache: ICache<K, V>,
-    private val keySelector: (V) -> K = { throw IllegalStateException() }
-) : ISourceUpdater<K, V>, IQuery<K, V> by cache {
+    private val _cache: ICache<K, V>,
+    private val _keySelector: (V) -> K = { throw IllegalStateException() }
+) : ISourceUpdater<K, V>, IQuery<K, V> by _cache {
 
-    constructor(data: Map<K, V>, keySelector: (V) -> K = { throw IllegalStateException() })
+    constructor(data: MutableMap<K, V>, keySelector: (V) -> K = Stub.emptyMapper())
             : this(Cache(data), keySelector)
 
     override fun load(items: Iterable<V>) {
@@ -15,20 +16,20 @@ internal class CacheUpdater<K, V>(
         addOrUpdate(items)
     }
 
-    fun addOrUpdate(item: V) =
-        cache.addOrUpdate(item, keySelector(item))
+    override fun addOrUpdate(item: V) =
+        _cache.addOrUpdate(item, _keySelector(item))
 
     override fun addOrUpdate(items: Iterable<V>) =
-        items.forEach { cache.addOrUpdate(it, keySelector(it)) }
+        items.forEach { _cache.addOrUpdate(it, _keySelector(it)) }
 
     override fun addOrUpdate(item: Pair<K, V>) =
         TODO()
 
     override fun addOrUpdate(item: V, key: K) =
-        cache.addOrUpdate(item, key)
+        _cache.addOrUpdate(item, key)
 
     override fun refresh() =
-        cache.refresh()
+        _cache.refresh()
 
     override fun refresh(keys: Iterable<K>) =
         keys.forEach { refresh(it) }
@@ -45,10 +46,10 @@ internal class CacheUpdater<K, V>(
     }
 
     override fun removeItem(item: V) =
-        cache.remove(keySelector(item))
+        _cache.remove(_keySelector(item))
 
     override fun remove(key: K) =
-        cache.remove(key)
+        _cache.remove(key)
 
     override fun removeKvp(items: Iterable<Pair<K, V>>) {
         TODO("Not yet implemented")
@@ -63,15 +64,15 @@ internal class CacheUpdater<K, V>(
     }
 
     override fun clone(changes: ChangeSet<K, V>) {
-        TODO("Not yet implemented")
+        _cache.clone(changes)
     }
 
     override fun clear() =
-        cache.clear()
+        _cache.clear()
 
     override fun getKey(item: V): K =
-        keySelector(item)
+        _keySelector(item)
 
     override fun getKeyValues(items: Iterable<V>): Map<K, V> =
-        items.associateBy(keySelector)
+        items.associateBy(_keySelector)
 }

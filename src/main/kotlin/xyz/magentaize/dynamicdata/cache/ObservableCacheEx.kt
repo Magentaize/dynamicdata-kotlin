@@ -44,6 +44,9 @@ fun <K, V> Observable<ChangeSet<K, V>>.or(
     return this.combine(CombineOperator.Or, *others)
 }
 
+fun <K, V> SourceCache<K, V>.addOrUpdate(item: V) =
+    this.edit { it.addOrUpdate(item) }
+
 fun <K, V> Iterable<Observable<ChangeSet<K, V>>>.or(): Observable<ChangeSet<K, V>> =
     combine(CombineOperator.Or)
 
@@ -125,6 +128,12 @@ fun <K, V, R> Observable<ChangeSet<K, V>>.mergeMany(selector: (K, V) -> Observab
 
 fun <K, V> Observable<ChangeSet<K, V>>.filter(filter: (V) -> Boolean): Observable<ChangeSet<K, V>> =
     StaticFilter(this, filter).run()
+
+fun <K, V> Observable<ChangeSet<K, V>>.asObservableCache(applyLocking: Boolean = true): ObservableCache<K, V> =
+    if (applyLocking)
+        AnonymousObservableCache(this)
+    else
+        LockFreeObservableCache(this)
 
 private fun <K, V> Iterable<Observable<ChangeSet<K, V>>>.combine(type: CombineOperator): Observable<ChangeSet<K, V>> =
     Observable.create { emitter ->

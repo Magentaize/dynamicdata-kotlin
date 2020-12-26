@@ -4,16 +4,16 @@ import xyz.magentaize.dynamicdata.domain.Person
 import org.amshove.kluent.shouldBeEqualTo
 import kotlin.test.Test
 
-internal class DeferUntilLoadedFixture{
+internal class DeferUntilLoadedFixture {
     @Test
-    fun deferUntilLoadedDoesNothingUntilDataHasBeenReceived(){
+    fun deferUntilLoadedDoesNothingUntilDataHasBeenReceived() {
         var updateReceived = false
-        var result: ChangeSet<Person>? = null
+        var result: ChangeSet<Person> = ChangeSet.empty()
         val cache = SourceList<Person>()
 
         val deferStream = cache.connect()
             .deferUntilLoaded()
-            .subscribe{
+            .subscribe {
                 updateReceived = true
                 result = it
             }
@@ -25,14 +25,14 @@ internal class DeferUntilLoadedFixture{
         cache.add(person)
 
         updateReceived shouldBeEqualTo true
-        result!!.adds shouldBeEqualTo 1
-        result!!.unified().first().current shouldBeEqualTo person
+        result.adds shouldBeEqualTo 1
+        result.unified().first().current shouldBeEqualTo person
 
         deferStream.dispose()
     }
 
     @Test
-    fun skipInitialDoesNotReturnTheFirstBatchOfData(){
+    fun skipInitialDoesNotReturnTheFirstBatchOfData() {
         var updateReceived = false
         val cache = SourceList<Person>()
 

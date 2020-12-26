@@ -234,15 +234,15 @@ internal class AutoRefreshFixture {
 
         val groupOf3 = result.data.items.elementAt(2)
 
-        var changes: ChangeSet<Person>? = null
+        var changes: ChangeSet<Person> = ChangeSet.empty()
         groupOf3.list.connect().subscribe { changes = it }
 
         //refresh an item which makes it belong to the same group - should then propagate a refresh
         items[2].age = 13
         changes `should not be equal to` null
-        changes!!.size shouldBeEqualTo 1
-        changes!!.first().reason shouldBeEqualTo ListChangeReason.Replace
-        changes!!.first().item.current shouldBe items[2]
+        changes.size shouldBeEqualTo 1
+        changes.first().reason shouldBeEqualTo ListChangeReason.Replace
+        changes.first().item.current shouldBe items[2]
     }
 
     @Test

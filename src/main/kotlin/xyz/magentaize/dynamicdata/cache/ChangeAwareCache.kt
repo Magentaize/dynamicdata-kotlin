@@ -7,14 +7,23 @@ class ChangeAwareCache<K, V>(
     private var data: MutableMap<K, V>
 ) : ICache<K, V> {
 
+    @Suppress("UNCHECKED_CAST")
+    companion object {
+        @JvmStatic
+        fun <K, V> empty(): ChangeAwareCache<K, V> = INSTANCE as ChangeAwareCache<K, V>
+
+        @JvmStatic
+        private val INSTANCE = ChangeAwareCache<Any, Any>()
+    }
+
     constructor() : this(AnonymousChangeSet(), LinkedHashMap())
 
     constructor(capacity: Int) : this(
         AnonymousChangeSet(capacity), LinkedHashMap(capacity)
     )
 
-    constructor(data: Map<K, V>) : this(
-        AnonymousChangeSet(), data.toMutableMap()
+    constructor(data: MutableMap<K, V>) : this(
+        AnonymousChangeSet(), data
     )
 
     val size: Int

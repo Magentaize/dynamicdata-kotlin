@@ -12,7 +12,7 @@ internal class TransformerWithForcedTransform<K, E, R>(
     private val _source: Observable<ChangeSet<K, E>>,
     private val _factory: (K, E, Optional<E>) -> R,
     private val _forceTransform: Observable<(K, E) -> Boolean>,
-    private val _exceptionCallback: (Error<K, E>) -> Unit = (Stub)::EMPTY_CALLBACK,
+    private val _exceptionCallback: (Error<K, E>) -> Unit = Stub.EMPTY_COMSUMER,
 ) {
     fun run(): Observable<ChangeSet<K, R>> =
         Observable.create { emitter ->

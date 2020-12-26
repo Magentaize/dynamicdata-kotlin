@@ -13,11 +13,11 @@ import java.lang.Exception
 internal class Transformer<K, E, R>(
     private val _source: Observable<ChangeSet<K, E>>,
     private val _factory: (K, E, Optional<E>) -> R,
-    private val _exceptionCallback: (Error<K, E>) -> Unit = (Stub)::EMPTY_CALLBACK,
+    private val _exceptionCallback: (Error<K, E>) -> Unit = Stub.EMPTY_COMSUMER,
     private val _transformOnRefresh: Boolean = false
 ) {
     fun run(): Observable<ChangeSet<K, R>> =
-        _source.scan(null as ChangeAwareCache<K, R>?) { state, changes ->
+        _source.scan(ChangeAwareCache.empty<K, R>()) { state, changes ->
             val cache = state ?: ChangeAwareCache(changes.size)
 
             changes.forEach { change ->
@@ -28,7 +28,7 @@ internal class Transformer<K, E, R>(
 
                 when (change.reason) {
                     ChangeReason.Add, ChangeReason.Update -> {
-                        if (_exceptionCallback != ((Stub)::EMPTY_CALLBACK)) {
+                        if (_exceptionCallback != ((Stub)::EMPTY_COMSUMER)) {
                             try {
                                 action()
                             } catch (ex: Exception) {
@@ -56,8 +56,8 @@ internal class Transformer<K, E, R>(
             return@scan cache
         }
             .skip(1)
-            .filter { it != null }
-            .map { it!!.captureChanges() }
+            .filter { it != ChangeAwareCache.empty<K, R>() }
+            .map { it.captureChanges() }
             .notEmpty()
 }
 

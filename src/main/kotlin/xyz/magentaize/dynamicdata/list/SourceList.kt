@@ -6,6 +6,7 @@ import xyz.magentaize.dynamicdata.list.internal.ReaderWriter
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
+import xyz.magentaize.dynamicdata.kernel.Stub
 
 class SourceList<T>(source: Observable<ChangeSet<T>>? = null) : EditableObservableList<T> {
     private val changes = PublishSubject.create<ChangeSet<T>>()
@@ -36,7 +37,7 @@ class SourceList<T>(source: Observable<ChangeSet<T>>? = null) : EditableObservab
 
     override fun edit(action: (ExtendedList<T>) -> Unit) =
         synchronized(lock) {
-            var change = AnonymousChangeSet.empty<T>()
+            var change = ChangeSet.empty<T>()
             editLevel++
 
             if (editLevel == 1) {
@@ -102,14 +103,14 @@ class SourceList<T>(source: Observable<ChangeSet<T>>? = null) : EditableObservab
         }
 
         cleanup.dispose()
-        //changesPreview.dispose()
+        changesPreview.onComplete()
     }
 
     override fun isDisposed(): Boolean {
         return disposed
     }
 
-    override fun connect(predicate: ((T) -> Boolean)?): Observable<ChangeSet<T>> {
+    override fun connect(predicate: (T) -> Boolean): Observable<ChangeSet<T>> {
         var observable = Observable.create<ChangeSet<T>> { emitter ->
             synchronized(lock) {
                 if (readerWriter.items.isNotEmpty()) {
@@ -124,16 +125,16 @@ class SourceList<T>(source: Observable<ChangeSet<T>>? = null) : EditableObservab
             }
         }
 
-        if (predicate != null) {
+        if (predicate != Stub.emptyFilter<T>()) {
             observable = FilterStatic(observable, predicate).run()
         }
 
         return observable
     }
 
-    override fun preview(predicate: ((T) -> Boolean)?): Observable<ChangeSet<T>> {
+    override fun preview(predicate: (T) -> Boolean): Observable<ChangeSet<T>> {
         var observable: Observable<ChangeSet<T>> = changesPreview
-        if (predicate != null)
+        if (predicate != Stub.emptyFilter<T>())
             observable = FilterStatic(observable, predicate).run()
 
         return observable

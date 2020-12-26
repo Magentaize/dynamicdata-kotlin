@@ -12,7 +12,7 @@ internal class RefCount<T>(
 ) {
     private val _lock = Any()
     private var _refCount = 0
-    private var _list: ObservableList<T>? = null
+    private var _list: ObservableList<T> = ObservableList.empty()
 
     fun run(): Observable<ChangeSet<T>> =
         Observable.create { emitter ->
@@ -21,19 +21,15 @@ internal class RefCount<T>(
                     _list = _source.asObservableList()
             }
 
-            val subscriber = _list!!.connect().subscribeBy(emitter)
+            val subscriber = _list.connect().subscribeBy(emitter)
 
             val d = Disposable.fromAction {
                 subscriber.dispose()
-                var listToDispose: Disposable? = null
                 synchronized(_lock) {
                     if (--_refCount == 0) {
-                        listToDispose = _list
-                        _list = null
+                        _list.dispose()
                     }
                 }
-
-                listToDispose?.dispose()
             }
 
             emitter.setDisposable(d)

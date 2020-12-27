@@ -1,9 +1,7 @@
 package xyz.magentaize.dynamicdata.domain
 
 import xyz.magentaize.dynamicdata.kernel.NotifyPropertyChanged
-import xyz.magentaize.dynamicdata.kernel.PropertyChangedEvent
-import io.reactivex.rxjava3.subjects.PublishSubject
-import io.reactivex.rxjava3.subjects.Subject
+import xyz.magentaize.dynamicdata.kernel.PropertyChangedDelegate
 
 internal class Person(
     val name: String,
@@ -17,18 +15,15 @@ internal class Person(
 
         fun make100People(): List<Person> =
             (1..100).map(this::age1Person)
+
+        fun make100AgedPeople(): List<Person> =
+            (1..100).map { Person("Person$it", it) }
     }
 
-    var age = age
-        set(value) {
-            field = value
-            propertyChanged.onNext(PropertyChangedEvent(this, "age"))
-        }
+    var age: Int by PropertyChangedDelegate(age)
 
     constructor(firstName: String, lastName: String, age: Int)
             : this("$firstName $lastName", age)
-
-    override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
 
     override fun equals(other: Any?): Boolean {
         if (other !is Person)
@@ -44,4 +39,14 @@ internal class Person(
     override fun toString(): String {
         return "$name. $age"
     }
+
+    private var _isDisposed = false
+
+    override fun dispose() {
+        super.dispose()
+        _isDisposed = true
+    }
+
+    override fun isDisposed(): Boolean =
+        _isDisposed
 }

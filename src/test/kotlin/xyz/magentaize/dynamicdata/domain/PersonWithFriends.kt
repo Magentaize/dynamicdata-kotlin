@@ -26,4 +26,14 @@ class PersonWithFriends(
 
     override val propertyChanged: Subject<PropertyChangedEvent> =
         PublishSubject.create()
+
+    private var _isDisposed = false
+
+    override fun dispose() {
+        super.dispose()
+        _isDisposed = true
+    }
+
+    override fun isDisposed(): Boolean =
+        _isDisposed
 }

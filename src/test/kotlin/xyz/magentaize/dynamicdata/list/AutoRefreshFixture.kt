@@ -2,14 +2,12 @@ package xyz.magentaize.dynamicdata.list
 
 import xyz.magentaize.dynamicdata.domain.Person
 import xyz.magentaize.dynamicdata.kernel.NotifyPropertyChanged
-import xyz.magentaize.dynamicdata.kernel.PropertyChangedEvent
 import xyz.magentaize.dynamicdata.list.test.asAggregator
 import io.reactivex.rxjava3.schedulers.TestScheduler
-import io.reactivex.rxjava3.subjects.PublishSubject
-import io.reactivex.rxjava3.subjects.Subject
 import org.amshove.kluent.`should not be equal to`
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
+import xyz.magentaize.dynamicdata.kernel.PropertyChangedDelegate
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.time.seconds
@@ -17,7 +15,7 @@ import kotlin.time.seconds
 internal class AutoRefreshFixture {
     @Test
     fun autoRefresh() {
-        val items = (1..100).map { Person("Person$it", 1) }
+        val items = Person.make100People()
         val list = SourceList<Person>()
         val results = list.connect().autoRefresh(Person::age).asAggregator()
 
@@ -53,7 +51,7 @@ internal class AutoRefreshFixture {
     @Test
     fun autoRefreshBatched() {
         val scheduler = TestScheduler()
-        val items = (1..100).map { Person("Person$it", 1) }.toList()
+        val items = Person.make100People().toList()
         val list = SourceList<Person>()
         val result = list.connect().autoRefresh(Person::age, 1.seconds, scheduler = scheduler).asAggregator()
 
@@ -72,7 +70,7 @@ internal class AutoRefreshFixture {
 
     @Test
     fun autoRefreshFilter() {
-        val items = (1..100).map { Person("Person$it", it) }.toList()
+        val items = Person.make100AgedPeople().toList()
         val list = SourceList<Person>()
         val result = list.connect()
             .autoRefresh(Person::age)
@@ -121,7 +119,7 @@ internal class AutoRefreshFixture {
 
     @Test
     fun autoRefreshTransform() {
-        val items = (1..100).map { Person("Person$it", it) }.toList()
+        val items = Person.make100AgedPeople().toList()
         val list = SourceList<Person>()
         val result = list.connect()
             .autoRefresh(Person::age)
@@ -147,7 +145,7 @@ internal class AutoRefreshFixture {
 
     @Test
     fun autoRefreshSort() {
-        val items = (1..100).map { Person("Person$it", it) }
+        val items = Person.make100AgedPeople()
             .sortedByDescending { it.age }
             .toList()
         val comparator = compareBy<Person> { it.age }
@@ -195,7 +193,7 @@ internal class AutoRefreshFixture {
 
     @Test
     fun autoRefreshGroupOnMutable() {
-        val items = (1..100).map { Person("Person$it", it) }.toList()
+        val items = Person.make100AgedPeople().toList()
         val list = SourceList<Person>()
         val result = list.connect()
             .autoRefresh(Person::age)
@@ -248,7 +246,7 @@ internal class AutoRefreshFixture {
 
     @Test
     fun autoRefreshGroup() {
-        val items = (1..100).map { Person("Person$it", it) }.toList()
+        val items = Person.make100AgedPeople().toList()
         val list = SourceList<Person>()
         val result = list.connect()
             .autoRefresh(Person::age)
@@ -295,7 +293,7 @@ internal class AutoRefreshFixture {
 
     @Test
     fun autoRefreshDistinct() {
-        val items = (1..100).map { Person("Person$it", it) }.toList()
+        val items = Person.make100AgedPeople().toList()
         val list = SourceList<Person>()
         val result = list.connect()
             .autoRefresh(Person::age)
@@ -336,13 +334,16 @@ internal class AutoRefreshFixture {
     }
 
     class SelectableItem(val id: Int) : NotifyPropertyChanged {
-        override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
+        var isSelected: Boolean by PropertyChangedDelegate(false)
+        private var _isDisposed = false
 
-        var isSelected: Boolean = false
-            set(value) {
-                field = value
-                propertyChanged.onNext(PropertyChangedEvent(this, "isSelected"))
-            }
+        override fun dispose() {
+            super.dispose()
+            _isDisposed = true
+        }
+
+        override fun isDisposed(): Boolean =
+            _isDisposed
     }
 
     @Test
@@ -360,12 +361,16 @@ internal class AutoRefreshFixture {
     }
 
     class Example : NotifyPropertyChanged {
-        override val propertyChanged: Subject<PropertyChangedEvent> = PublishSubject.create()
+        var value: Int by PropertyChangedDelegate(0)
 
-        var value: Int = 0
-            set(value) {
-                field = value
-                propertyChanged.onNext(PropertyChangedEvent(this, "value"))
-            }
+        private var _isDisposed = false
+
+        override fun dispose() {
+            super.dispose()
+            _isDisposed = true
+        }
+
+        override fun isDisposed(): Boolean =
+            _isDisposed
     }
 }

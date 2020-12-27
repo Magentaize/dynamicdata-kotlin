@@ -18,12 +18,10 @@ import xyz.magentaize.dynamicdata.list.asObservableList
 import xyz.magentaize.dynamicdata.list.transform
 import kotlin.reflect.KProperty1
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
 fun <T> Observable<T>.monitorStatus(): Observable<ConnectionStatus> =
     StatusMonitor(this).run()
 
-@ExperimentalTime
 fun <K, V : NotifyPropertyChanged, T> Observable<ChangeSet<K, V>>.autoRefresh(
     accessor: KProperty1<V, T>,
     changeSetBuffer: Duration = Duration.ZERO,
@@ -37,7 +35,6 @@ fun <K, V : NotifyPropertyChanged, T> Observable<ChangeSet<K, V>>.autoRefresh(
             t.whenPropertyChanged(accessor, false).throttleWithTimeout(propertyChangeThrottle, scheduler)
     }, changeSetBuffer, scheduler)
 
-@ExperimentalTime
 fun <K, V, T> Observable<ChangeSet<K, V>>.autoRefreshOnObservable(
     evaluator: (V) -> Observable<T>,
     changeSetBuffer: Duration = Duration.ZERO,
@@ -45,7 +42,6 @@ fun <K, V, T> Observable<ChangeSet<K, V>>.autoRefreshOnObservable(
 ): Observable<ChangeSet<K, V>> =
     autoRefreshOnObservable({ _, t -> evaluator(t) }, changeSetBuffer, scheduler)
 
-@ExperimentalTime
 fun <K, V, T> Observable<ChangeSet<K, V>>.autoRefreshOnObservable(
     evaluator: (K, V) -> Observable<T>,
     duration: Duration = Duration.ZERO,
@@ -85,8 +81,14 @@ fun <K, V> SourceCache<K, V>.addOrUpdate(item: V) =
 fun <K, V> SourceCache<K, V>.addOrUpdate(items: Iterable<V>) =
     this.edit { it.addOrUpdate(items) }
 
+fun <K, V> SourceCache<K, V>.remove(key: K) =
+    this.edit { it.remove(key) }
+
 fun <K, V> SourceCache<K, V>.removeItem(item: V) =
     this.edit { it.removeItem(item) }
+
+fun <K, V> SourceCache<K, V>.clear() =
+    this.edit { it.clear() }
 
 fun <K, V> Iterable<Observable<ChangeSet<K, V>>>.or(): Observable<ChangeSet<K, V>> =
     combine(CombineOperator.Or)

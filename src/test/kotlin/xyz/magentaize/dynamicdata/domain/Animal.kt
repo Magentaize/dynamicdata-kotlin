@@ -1,23 +1,24 @@
 package xyz.magentaize.dynamicdata.domain
 
 import xyz.magentaize.dynamicdata.kernel.NotifyPropertyChanged
-import xyz.magentaize.dynamicdata.kernel.PropertyChangedEvent
-import io.reactivex.rxjava3.subjects.PublishSubject
-import io.reactivex.rxjava3.subjects.Subject
+import xyz.magentaize.dynamicdata.kernel.PropertyChangedDelegate
 
 class Animal(
     val name: String,
     val type: String,
     val family: AnimalFamily
 ) : NotifyPropertyChanged {
-    override val propertyChanged: Subject<PropertyChangedEvent> =
-        PublishSubject.create()
+    var includeInResults: Boolean by PropertyChangedDelegate(false)
 
-    var includeInResults: Boolean = false
-        set(value) {
-            field = value
-            propertyChanged.onNext(PropertyChangedEvent(this, "includeInResults"))
-        }
+    private var _isDisposed = false
+
+    override fun dispose() {
+        super.dispose()
+        _isDisposed = true
+    }
+
+    override fun isDisposed(): Boolean =
+        _isDisposed
 }
 
 enum class AnimalFamily {

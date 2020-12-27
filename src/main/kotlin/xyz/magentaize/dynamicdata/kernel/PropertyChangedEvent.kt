@@ -4,5 +4,5 @@ import java.util.*
 
 open class PropertyChangedEvent(
     sender: Any,
-    open val propertyName: String
+    val propertyName: String
 ) : EventObject(sender)

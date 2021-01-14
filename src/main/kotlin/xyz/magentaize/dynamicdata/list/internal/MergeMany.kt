@@ -14,8 +14,8 @@ internal class MergeMany<T, R>(
         ObservableEx.create { emitter ->
             return@create _source
                 .subscribeMany { t ->
-                _selector(t).serialize().subscribe(emitter::onNext)
-            }
+                    _selector(t).serialize().subscribe(emitter::onNext)
+                }
                 .subscribe(Functions.emptyConsumer(), emitter::onError)
         }
 }

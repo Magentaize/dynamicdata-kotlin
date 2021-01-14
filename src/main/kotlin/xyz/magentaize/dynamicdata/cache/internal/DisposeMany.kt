@@ -2,6 +2,7 @@ package xyz.magentaize.dynamicdata.cache.internal
 
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.internal.functions.Functions
 import xyz.magentaize.dynamicdata.cache.ChangeReason
 import xyz.magentaize.dynamicdata.cache.ChangeSet
 import xyz.magentaize.dynamicdata.kernel.ObservableEx
@@ -27,7 +28,7 @@ internal class DisposeMany<K, V>(
             }
         }
 
-    private fun registerForRemoval(changes: ChangeSet<K, V>, cache: Cache<K, V>) =
+    private fun registerForRemoval(changes: ChangeSet<K, V>, cache: Cache<K, V>) {
         changes.forEach {
             when (it.reason) {
                 ChangeReason.Update ->
@@ -35,6 +36,10 @@ internal class DisposeMany<K, V>(
 
                 ChangeReason.Remove ->
                     _removeAction(it.current)
+
+                else -> {}
             }
         }
+        cache.clone(changes)
+    }
 }

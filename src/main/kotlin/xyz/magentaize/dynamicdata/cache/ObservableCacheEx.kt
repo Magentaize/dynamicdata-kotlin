@@ -139,19 +139,33 @@ fun <K, V> ObservableList<ObservableCache<K, V>>.except(): Observable<ChangeSet<
 fun <K, V, C : ChangeSet<K, V>> Observable<C>.notEmpty(): Observable<C> =
     filter { it.size != 0 }
 
-fun <K, E, R> Observable<ChangeSet<K, E>>.transform(
-    factory: (K, E) -> R,
+@JvmName("transformWithForceUnit")
+fun <K, V, R> Observable<ChangeSet<K, V>>.transform(
+    factory: (V) -> R,
+    forceTransform: Observable<Unit>
+): Observable<ChangeSet<K, R>> =
+    transform({ _, current, _ -> factory(current) }, forceTransform.forForced())
+
+fun <K, V, R> Observable<ChangeSet<K, V>>.transform(
+    factory: (V) -> R,
     @Suppress("ReactiveStreamsUnusedPublisher")
-    forceTransform: Observable<(K, E) -> Boolean> = Observable.never()
+    forceTransform: Observable<(V) -> Boolean> = Observable.never()
+): Observable<ChangeSet<K, R>> =
+    transform({ _, current, _ -> factory(current) }, forceTransform.forForced())
+
+fun <K, V, R> Observable<ChangeSet<K, V>>.transform(
+    factory: (K, V) -> R,
+    @Suppress("ReactiveStreamsUnusedPublisher")
+    forceTransform: Observable<(K, V) -> Boolean> = Observable.never()
 ): Observable<ChangeSet<K, R>> =
     transform({ key, current, _ -> factory(key, current) }, forceTransform)
 
-fun <K, E, R> Observable<ChangeSet<K, E>>.transform(
-    factory: (K, E, Optional<E>) -> R,
+fun <K, V, R> Observable<ChangeSet<K, V>>.transform(
+    factory: (K, V, Optional<V>) -> R,
     @Suppress("ReactiveStreamsUnusedPublisher")
-    forceTransform: Observable<(K, E) -> Boolean> = Observable.never()
+    forceTransform: Observable<(K, V) -> Boolean> = Observable.never()
 ): Observable<ChangeSet<K, R>> =
-    if (forceTransform != Observable.never<(K, E) -> Boolean>())
+    if (forceTransform != Observable.never<(K, V) -> Boolean>())
         TransformerWithForcedTransform(this, factory, forceTransform).run()
     else
         Transformer(this, factory).run()
@@ -236,3 +250,20 @@ private fun <K, V> ObservableList<ObservableCache<K, V>>.combine(type: CombineOp
         val sub = connections.combine(type).subscribeBy(emitter)
         emitter.setDisposable(CompositeDisposable(connections, sub))
     }
+
+@JvmName("forForcedUnit")
+private fun <K, V> Observable<Unit>.forForced(): Observable<(K, V) -> Boolean> =
+    if (this === Observable.never<(K, V) -> Boolean>())
+        this
+    else
+        this.map { _ ->
+            return@map { _: K, _: V -> true }
+        }
+
+private fun <K, V> Observable<(V) -> Boolean>.forForced(): Observable<(K, V) -> Boolean> =
+    if (this === Observable.never<(K, V) -> Boolean>())
+        this
+    else
+        this.map { condition ->
+            return@map { _: K, item: V -> condition(item) }
+        }

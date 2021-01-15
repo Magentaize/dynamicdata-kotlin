@@ -1,3 +1,5 @@
+@file:Suppress("ReactiveStreamsUnusedPublisher")
+
 package xyz.magentaize.dynamicdata.list
 
 import xyz.magentaize.dynamicdata.binding.whenPropertyChanged
@@ -153,7 +155,7 @@ private fun <T> Observable<ChangeSet<T>>.combine(
     if (others.isEmpty())
         throw IllegalArgumentException("Must be at least one item to combine with")
 
-    val items = listOf(this).union(others.toList()).toList()
+    val items = listOf(this, * others)
     return Combiner(items, type).run()
 }
 

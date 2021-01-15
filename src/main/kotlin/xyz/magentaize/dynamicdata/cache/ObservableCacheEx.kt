@@ -1,3 +1,5 @@
+@file:Suppress("ReactiveStreamsUnusedPublisher")
+
 package xyz.magentaize.dynamicdata.cache
 
 import io.reactivex.rxjava3.core.Observable
@@ -66,6 +68,20 @@ fun <K, V> ObservableList<Observable<ChangeSet<K, V>>>.add(): Observable<ChangeS
 @JvmName("AndCache")
 fun <K, V> ObservableList<ObservableCache<K, V>>.add(): Observable<ChangeSet<K, V>> =
     combine(CombineOperator.And)
+
+fun <K, V> Observable<ChangeSet<K, V>>.and(vararg others: Observable<ChangeSet<K, V>>): Observable<ChangeSet<K, V>> {
+    require(others.isNotEmpty()) { "Must be at least one item to combine with" }
+
+    return this.combine(CombineOperator.And, *others)
+}
+
+fun <K, V> Collection<Observable<ChangeSet<K, V>>>.and(): Observable<ChangeSet<K, V>> {
+    return this.combine(CombineOperator.And)
+}
+
+fun <K, V> ObservableList<Observable<ChangeSet<K, V>>>.and(): Observable<ChangeSet<K, V>> {
+    return this.combine(CombineOperator.And)
+}
 
 fun <K, V> Observable<ChangeSet<K, V>>.or(
     vararg others: Observable<ChangeSet<K, V>>
@@ -148,21 +164,18 @@ fun <K, V, R> Observable<ChangeSet<K, V>>.transform(
 
 fun <K, V, R> Observable<ChangeSet<K, V>>.transform(
     factory: (V) -> R,
-    @Suppress("ReactiveStreamsUnusedPublisher")
     forceTransform: Observable<(V) -> Boolean> = Observable.never()
 ): Observable<ChangeSet<K, R>> =
     transform({ _, current, _ -> factory(current) }, forceTransform.forForced())
 
 fun <K, V, R> Observable<ChangeSet<K, V>>.transform(
     factory: (K, V) -> R,
-    @Suppress("ReactiveStreamsUnusedPublisher")
     forceTransform: Observable<(K, V) -> Boolean> = Observable.never()
 ): Observable<ChangeSet<K, R>> =
     transform({ key, current, _ -> factory(key, current) }, forceTransform)
 
 fun <K, V, R> Observable<ChangeSet<K, V>>.transform(
     factory: (K, V, Optional<V>) -> R,
-    @Suppress("ReactiveStreamsUnusedPublisher")
     forceTransform: Observable<(K, V) -> Boolean> = Observable.never()
 ): Observable<ChangeSet<K, R>> =
     if (forceTransform != Observable.never<(K, V) -> Boolean>())
@@ -220,7 +233,7 @@ private fun <K, V> Observable<ChangeSet<K, V>>.combine(
     type: CombineOperator,
     vararg target: Observable<ChangeSet<K, V>>
 ): Observable<ChangeSet<K, V>> =
-    Observable.create { emitter ->
+    ObservableEx.create { emitter ->
         fun update(updates: ChangeSet<K, V>) {
             try {
                 emitter.onNext(updates)
@@ -231,8 +244,7 @@ private fun <K, V> Observable<ChangeSet<K, V>>.combine(
 
         var d = Disposable.empty()
         try {
-            val list = target.toMutableList()
-            list.add(0, this)
+            val list = listOf(this, *target)
 
             val combiner = Combiner(type, ::update)
             d = combiner.run(list)
@@ -241,7 +253,7 @@ private fun <K, V> Observable<ChangeSet<K, V>>.combine(
             emitter.onComplete()
         }
 
-        emitter.setDisposable(d)
+        return@create d
     }
 
 private fun <K, V> ObservableList<ObservableCache<K, V>>.combine(type: CombineOperator): Observable<ChangeSet<K, V>> =

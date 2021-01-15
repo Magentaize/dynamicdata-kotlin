@@ -19,7 +19,7 @@ internal class Combiner<K, V>(
     fun run(source: List<Observable<ChangeSet<K, V>>>): Disposable {
         val d = CompositeDisposable()
         synchronized(_lock) {
-            val caches = (0..source.size).map { Cache<K, V>() }
+            val caches = List(source.size) { Cache<K, V>() }
             _sourceCaches.addAll(caches)
 
             source.zip(_sourceCaches) { item, cache ->
@@ -42,7 +42,7 @@ internal class Combiner<K, V>(
         }
     }
 
-    fun updateCombined(updates: ChangeSet<K, V>): ChangeSet<K, V> {
+    private fun updateCombined(updates: ChangeSet<K, V>): ChangeSet<K, V> {
         updates.forEach { update ->
             val key = update.key
             when (update.reason) {
@@ -53,7 +53,7 @@ internal class Combiner<K, V>(
 
                     if (match) {
                         if (contained) {
-                            if (update.current !== cached) {
+                            if (update.current !== cached.value) {
                                 _combinedCache.addOrUpdate(update.current, key)
                             }
                         } else {
@@ -90,6 +90,9 @@ internal class Combiner<K, V>(
 
                 ChangeReason.Refresh ->
                     _combinedCache.refresh(key)
+
+                else -> {
+                }
             }
         }
 

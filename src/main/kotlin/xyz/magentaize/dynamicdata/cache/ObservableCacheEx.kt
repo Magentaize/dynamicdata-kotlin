@@ -18,6 +18,7 @@ import xyz.magentaize.dynamicdata.kernel.subscribeBy
 import xyz.magentaize.dynamicdata.list.ObservableList
 import xyz.magentaize.dynamicdata.list.asObservableList
 import xyz.magentaize.dynamicdata.list.transform
+import java.util.concurrent.TimeUnit
 import kotlin.reflect.KProperty1
 import kotlin.time.Duration
 
@@ -68,6 +69,12 @@ fun <K, V> ObservableList<Observable<ChangeSet<K, V>>>.add(): Observable<ChangeS
 @JvmName("AndCache")
 fun <K, V> ObservableList<ObservableCache<K, V>>.add(): Observable<ChangeSet<K, V>> =
     combine(CombineOperator.And)
+
+fun <K, V> Observable<ChangeSet<K, V>>.batch(
+    timespan: Duration,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<ChangeSet<K, V>> =
+    this.buffer(timespan.toLongMilliseconds(), TimeUnit.MILLISECONDS, scheduler).flattenBufferResult()
 
 fun <K, V> Observable<ChangeSet<K, V>>.and(vararg others: Observable<ChangeSet<K, V>>): Observable<ChangeSet<K, V>> {
     require(others.isNotEmpty()) { "Must be at least one item to combine with" }
@@ -151,6 +158,9 @@ fun <K, V> ObservableList<Observable<ChangeSet<K, V>>>.except(): Observable<Chan
 @JvmName("ExceptCache")
 fun <K, V> ObservableList<ObservableCache<K, V>>.except(): Observable<ChangeSet<K, V>> =
     combine(CombineOperator.Except)
+
+fun <K, V> Observable<List<ChangeSet<K, V>>>.flattenBufferResult(): Observable<ChangeSet<K, V>> =
+    this.filter { it.isNotEmpty() }.map { updates -> AnonymousChangeSet(updates.flatten()) }
 
 fun <K, V, C : ChangeSet<K, V>> Observable<C>.notEmpty(): Observable<C> =
     filter { it.size != 0 }

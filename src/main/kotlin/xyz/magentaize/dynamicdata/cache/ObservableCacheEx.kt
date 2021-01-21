@@ -76,6 +76,34 @@ fun <K, V> Observable<ChangeSet<K, V>>.batch(
 ): Observable<ChangeSet<K, V>> =
     this.buffer(timespan.toLongMilliseconds(), TimeUnit.MILLISECONDS, scheduler).flattenBufferResult()
 
+fun <K, V> Observable<ChangeSet<K, V>>.batchIf(
+    pauseIfTrueSelector: Observable<Boolean>,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<ChangeSet<K, V>> =
+    this.batchIf(pauseIfTrueSelector, false, scheduler)
+
+fun <K, V> Observable<ChangeSet<K, V>>.batchIf(
+    pauseIfTrueSelector: Observable<Boolean>,
+    timeout: Duration = Duration.ZERO,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<ChangeSet<K, V>> =
+    this.batchIf(pauseIfTrueSelector, false, timeout, scheduler)
+
+fun <K, V> Observable<ChangeSet<K, V>>.batchIf(
+    pauseIfTrueSelector: Observable<Boolean>,
+    initialPauseState: Boolean = false,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<ChangeSet<K, V>> =
+    BatchIf(this, pauseIfTrueSelector, Duration.ZERO, initialPauseState, _scheduler = scheduler).run()
+
+fun <K, V> Observable<ChangeSet<K, V>>.batchIf(
+    pauseIfTrueSelector: Observable<Boolean>,
+    initialPauseState: Boolean = false,
+    timeout: Duration = Duration.ZERO,
+    scheduler: Scheduler = Schedulers.computation()
+): Observable<ChangeSet<K, V>> =
+    BatchIf(this, pauseIfTrueSelector, Duration.ZERO, initialPauseState, _scheduler = scheduler).run()
+
 fun <K, V> Observable<ChangeSet<K, V>>.and(vararg others: Observable<ChangeSet<K, V>>): Observable<ChangeSet<K, V>> {
     require(others.isNotEmpty()) { "Must be at least one item to combine with" }
 
